@@ -12,12 +12,14 @@ export class InputManager {
   private target: EventTarget | null = null;
   private keyDownHandler: (e: KeyboardEvent) => void;
   private keyUpHandler: (e: KeyboardEvent) => void;
+  private blurHandler: () => void;
 
   constructor(target?: EventTarget | null) {
     this.initDefaultBindings();
 
     this.keyDownHandler = (e: KeyboardEvent) => this.handleKeyDown(e);
     this.keyUpHandler = (e: KeyboardEvent) => this.handleKeyUp(e);
+    this.blurHandler = () => this.reset();
 
     const eventTarget = target !== undefined ? target : (typeof window !== 'undefined' ? window : null);
     if (eventTarget) {
@@ -40,12 +42,14 @@ export class InputManager {
     this.target = target;
     this.target.addEventListener('keydown', this.keyDownHandler as EventListener);
     this.target.addEventListener('keyup', this.keyUpHandler as EventListener);
+    this.target.addEventListener('blur', this.blurHandler as EventListener);
   }
 
   public detach(): void {
     if (this.target) {
       this.target.removeEventListener('keydown', this.keyDownHandler as EventListener);
       this.target.removeEventListener('keyup', this.keyUpHandler as EventListener);
+      this.target.removeEventListener('blur', this.blurHandler as EventListener);
       this.target = null;
     }
   }

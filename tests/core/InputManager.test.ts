@@ -101,4 +101,13 @@ describe('InputManager', () => {
     expect(input.isJustPressed('action')).toBe(false);
     expect(input.isJustPressed('up')).toBe(false);
   });
+
+  it('should reset input state when window loses focus (blur event)', () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyZ', key: 'z' }));
+    expect(input.isDown('action')).toBe(true);
+
+    window.dispatchEvent(new Event('blur'));
+    expect(input.isDown('action')).toBe(false);
+    expect(input.isJustPressed('action')).toBe(false);
+  });
 });

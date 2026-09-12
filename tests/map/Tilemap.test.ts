@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Tilemap } from '../../src/map/Tilemap';
-import { TILES, createTile } from '../../src/map/Tile';
+import { createTile } from '../../src/map/Tile';
 import { Renderer } from '../../src/core/Renderer';
 import { TILE_SIZE, CANVAS_WIDTH, CANVAS_HEIGHT } from '../../src/core/Constants';
 

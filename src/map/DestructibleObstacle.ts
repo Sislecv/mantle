@@ -3,7 +3,7 @@
  * Represents sword-cuttable trees, boulders, and wooden gates in the Dark World.
  */
 
-import { TILE_SIZE, NES_COLORS } from '../core/Constants';
+import { TILE_SIZE } from '../core/Constants';
 import { Renderer } from '../core/Renderer';
 
 export type ObstacleType = 'TREE' | 'BOULDER' | 'WOOD_GATE';
@@ -138,13 +138,13 @@ export class DestructibleObstacle {
     const drawY = this.gridY * s - cameraY;
 
     if (this.isDestroyed) {
-      this.renderDestroyed(renderer, drawX, drawY, s);
+      this.renderDestroyed(renderer, drawX, drawY);
     } else {
-      this.renderIntact(renderer, drawX, drawY, s);
+      this.renderIntact(renderer, drawX, drawY);
     }
   }
 
-  private renderIntact(renderer: Renderer, x: number, y: number, s: number): void {
+  private renderIntact(renderer: Renderer, x: number, y: number): void {
     switch (this.type) {
       case 'TREE':
         // Scarlet Forest Red/Crimson Tree
@@ -183,7 +183,7 @@ export class DestructibleObstacle {
     }
   }
 
-  private renderDestroyed(renderer: Renderer, x: number, y: number, s: number): void {
+  private renderDestroyed(renderer: Renderer, x: number, y: number): void {
     switch (this.type) {
       case 'TREE':
         // Cut stump

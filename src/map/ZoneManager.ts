@@ -5,7 +5,7 @@
  */
 
 import { Tilemap } from './Tilemap';
-import { Tile, TILES, createTile } from './Tile';
+import { TILES, createTile } from './Tile';
 import { DestructibleObstacle } from './DestructibleObstacle';
 import { Renderer } from '../core/Renderer';
 

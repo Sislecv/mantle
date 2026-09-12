@@ -5,7 +5,7 @@
 
 import { TILE_SIZE, NES_COLORS } from '../core/Constants';
 import { Renderer } from '../core/Renderer';
-import { Tile, TILES, createTile } from './Tile';
+import { Tile, TILES } from './Tile';
 
 export class Tilemap {
   public readonly width: number;

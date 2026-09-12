@@ -274,6 +274,38 @@ describe('Player (HERO_SWORD State Machine)', () => {
       expect(boulder.isDestroyed).toBe(true);
     });
 
+    it('should only damage an obstacle once per attack swing across multiple consecutive update frames', () => {
+      player.gainExp(200); // Level up to LV 3
+      expect(player.lv).toBe(3);
+
+      // Trigger first attack
+      player.attack();
+      expect(player.state).toBe('ATTACKING');
+
+      // Update 10 consecutive frames during this single swing
+      for (let f = 0; f < 10; f++) {
+        player.update(0.016, undefined, undefined, [boulder]);
+      }
+
+      // Boulder should only have taken 1 damage, remaining at 1 HP and intact
+      expect(boulder.hp).toBe(1);
+      expect(boulder.isDestroyed).toBe(false);
+
+      // Finish the rest of the attack duration to return to ARMED
+      player.update(0.2);
+      expect(player.state).toBe('ARMED');
+
+      // Trigger second separate attack
+      player.attack();
+      for (let f = 0; f < 10; f++) {
+        player.update(0.016, undefined, undefined, [boulder]);
+      }
+
+      // Now boulder has received its second hit and is destroyed!
+      expect(boulder.hp).toBe(0);
+      expect(boulder.isDestroyed).toBe(true);
+    });
+
     it('should return null when obstacle is out of attack range', () => {
       const farTree = new DestructibleObstacle({
         id: 'far_tree',
@@ -372,6 +404,17 @@ describe('Player (HERO_SWORD State Machine)', () => {
   });
 
   describe('Movement & Collision Handling', () => {
+    it('should have 85 px/s base walk speed in UNARMED state and 70 px/s in ARMED state', () => {
+      const unarmedPlayer = new Player();
+      expect(unarmedPlayer.state).toBe('UNARMED');
+      expect(unarmedPlayer.speed).toBe(85);
+
+      unarmedPlayer.pullSword(0.01);
+      unarmedPlayer.update(0.01);
+      expect(unarmedPlayer.state).toBe('ARMED');
+      expect(unarmedPlayer.speed).toBe(70);
+    });
+
     it('should update movement and facing from InputManager', () => {
       const input = new InputManager(null);
       // Simulate holding Right

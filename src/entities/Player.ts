@@ -32,12 +32,30 @@ export class Player extends Entity {
   public hp: number;
   public maxHp: number;
   public exp: number;
-  public speed: number;
   public attackDamage: number;
   public attackFrame: number = 0;
   public attackHitbox: Hitbox | null = null;
   public invulnerableTime: number = 0;
   public pullTimer: number = 0;
+
+  // Track obstacles hit during current attack swing to prevent multi-hit bug
+  private hitObstacleIds: Set<string> = new Set();
+
+  // Speed configuration (85 px/s when UNARMED, 70 px/s when ARMED)
+  private _baseSpeed: number = 70;
+  private customSpeed?: number;
+
+  public get speed(): number {
+    if (this.customSpeed !== undefined) {
+      return this.customSpeed;
+    }
+    return this.state === 'UNARMED' ? 85 : this._baseSpeed;
+  }
+
+  public set speed(val: number) {
+    this._baseSpeed = val;
+    this.customSpeed = val;
+  }
 
   // Internal timers & configurations
   private attackTimer: number = 0;
@@ -66,7 +84,10 @@ export class Player extends Entity {
     this.hp = options?.hp ?? 20;
     this.maxHp = options?.maxHp ?? 20;
     this.exp = options?.exp ?? 0;
-    this.speed = options?.speed ?? 70;
+    if (options?.speed !== undefined) {
+      this.customSpeed = options.speed;
+      this._baseSpeed = options.speed;
+    }
     this.attackDamage = options?.attackDamage ?? 1;
 
     if (this.hasSword && this.state === 'UNARMED') {
@@ -104,6 +125,7 @@ export class Player extends Entity {
     this.attackFrame = 0;
     this.vx = 0;
     this.vy = 0;
+    this.hitObstacleIds.clear();
 
     // Generate directional attack hitbox in front of player
     this.attackHitbox = this.createAttackHitbox(duration);
@@ -173,11 +195,13 @@ export class Player extends Entity {
       this.vx = 0;
       this.vy = 0;
       this.attackHitbox = null;
+      this.hitObstacleIds.clear();
     } else {
       this.state = 'HURT';
       this.hurtTimer = this.hurtDuration;
       this.invulnerableTime = 1.0;
       this.attackHitbox = null;
+      this.hitObstacleIds.clear();
     }
   }
 
@@ -209,6 +233,10 @@ export class Player extends Entity {
       return null;
     }
 
+    if (this.hitObstacleIds.has(obstacle.id)) {
+      return null;
+    }
+
     const obstacleBounds = {
       x: obstacle.gridX * TILE_SIZE,
       y: obstacle.gridY * TILE_SIZE,
@@ -217,6 +245,7 @@ export class Player extends Entity {
     };
 
     if (this.attackHitbox.intersects(obstacleBounds)) {
+      this.hitObstacleIds.add(obstacle.id);
       return obstacle.hit(this.attackHitbox.damage, this.lv, this.hasSword);
     }
 
@@ -303,6 +332,7 @@ export class Player extends Entity {
         this.attackTimer = 0;
         this.attackFrame = 0;
         this.attackHitbox = null;
+        this.hitObstacleIds.clear();
         this.state = 'ARMED';
       } else {
         const elapsed = this.attackDuration - this.attackTimer;

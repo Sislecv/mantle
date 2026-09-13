@@ -6,7 +6,7 @@
 import { TILE_SIZE } from '../core/Constants';
 import { Renderer } from '../core/Renderer';
 
-export type ObstacleType = 'TREE' | 'BOULDER' | 'WOOD_GATE';
+export type ObstacleType = 'TREE' | 'BOULDER' | 'WOOD_GATE' | 'SPIKE_BARRIER' | 'IRON_GATE';
 
 export interface ObstacleOptions {
   id: string;
@@ -59,6 +59,10 @@ export class DestructibleObstacle {
         return { requiredLv: 3, requiredSword: true, hp: 2 };
       case 'WOOD_GATE':
         return { requiredLv: 1, requiredSword: true, hp: 1 };
+      case 'SPIKE_BARRIER':
+        return { requiredLv: 99, requiredSword: false, hp: 999 };
+      case 'IRON_GATE':
+        return { requiredLv: 99, requiredSword: false, hp: 999 };
     }
   }
 
@@ -188,6 +192,24 @@ export class DestructibleObstacle {
         renderer.drawRect(x + 3, y + 4, 2, 2, '#8E8E93');
         renderer.drawRect(x + 11, y + 4, 2, 2, '#8E8E93');
         break;
+
+      case 'SPIKE_BARRIER':
+        // Electric / Energy Spikes
+        renderer.drawRect(x + 1, y + 1, 14, 14, '#1A1828');
+        renderer.drawRect(x + 2, y + 2, 12, 12, '#FFE040');
+        renderer.drawRect(x + 4, y + 4, 8, 8, '#FFFFFF');
+        renderer.drawRect(x + 6, y + 6, 4, 4, '#FFE040');
+        break;
+
+      case 'IRON_GATE':
+        // Royal Iron Portcullis Bars
+        renderer.drawRect(x + 1, y, 14, 16, '#282436');
+        renderer.drawRect(x + 3, y, 2, 16, '#707088');
+        renderer.drawRect(x + 7, y, 2, 16, '#707088');
+        renderer.drawRect(x + 11, y, 2, 16, '#707088');
+        renderer.drawRect(x + 1, y + 5, 14, 2, '#48485C');
+        renderer.drawRect(x + 1, y + 11, 14, 2, '#48485C');
+        break;
     }
   }
 
@@ -215,6 +237,17 @@ export class DestructibleObstacle {
         renderer.drawRect(x + 2, y + 12, 5, 2, '#5C381E');
         renderer.drawRect(x + 9, y + 13, 5, 2, '#7A4A28');
         renderer.drawRect(x + 7, y + 14, 2, 1, '#8E8E93');
+        break;
+
+      case 'SPIKE_BARRIER':
+        // Retracted floor plate
+        renderer.drawRect(x + 2, y + 2, 12, 12, '#201A30');
+        renderer.drawRect(x + 5, y + 5, 6, 6, '#3A3050');
+        break;
+
+      case 'IRON_GATE':
+        // Lowered / Open threshold
+        renderer.drawRect(x + 1, y + 14, 14, 2, '#48485C');
         break;
     }
   }

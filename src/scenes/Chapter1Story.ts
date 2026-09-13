@@ -78,6 +78,7 @@ export class Chapter1Story {
   public epilogueText: string = '';
   public notificationText: string = '';
   public notificationTimer: number = 0;
+  public transitionCooldown: number = 0;
 
   public showNotification(text: string, duration = 2.0): void {
     this.notificationText = text;
@@ -131,6 +132,11 @@ export class Chapter1Story {
       onSolveCallback: () => {
         this.fieldSpikesDeactivated = true;
         this.stage = 'SUIT_PUZZLE_SOLVED';
+        const zone = this.zoneManager.getCurrentZone();
+        zone.obstacles
+          .filter((o) => o.id.startsWith('field_spike'))
+          .forEach((o) => o.destroy());
+        this.showNotification('Electric barrier deactivated!', 2.0);
       },
     });
 
@@ -142,6 +148,11 @@ export class Chapter1Story {
       onSolveCallback: () => {
         this.fieldGateLowered = true;
         this.stage = 'BOX_PUZZLE_SOLVED';
+        const zone = this.zoneManager.getCurrentZone();
+        zone.obstacles
+          .filter((o) => o.id.startsWith('field_gate'))
+          .forEach((o) => o.destroy());
+        this.showNotification('The heavy gate lowered!', 2.0);
       },
     });
 
@@ -152,6 +163,15 @@ export class Chapter1Story {
       const castle = this.zoneManager.getCurrentZone();
       const gate = castle.obstacles.find((o) => o.id === 'castle_gate_1');
       if (gate) gate.destroy();
+
+      this.mode = 'DIALOGUE';
+      const solveLines = this.rouxlsPuzzle.getSolveDialogue();
+      this.dialogueBox.showDialogue(
+        solveLines.map((text) => ({ speaker: 'ROUXLS', text })),
+        () => {
+          this.mode = 'OVERWORLD';
+        }
+      );
     };
   }
 
@@ -172,15 +192,24 @@ export class Chapter1Story {
       [
         {
           speaker: 'SUSIE',
+          portrait: 'susie',
           text: 'Kris?! Where the hell are we?! Let\'s smash this gate and get moving.',
         },
       ],
       () => {
         this.mode = 'OVERWORLD';
         this.stage = 'MET_SUSIE';
+        this.synth.playSfx('OBSTACLE_DESTROY');
         const currentZone = this.zoneManager.getCurrentZone();
-        const gate = currentZone.obstacles.find((o) => o.id === 'cliffs_gate_1');
-        if (gate) gate.destroy();
+        currentZone.obstacles
+          .filter((o) => o.id.startsWith('cliffs_gate'))
+          .forEach((o) => o.destroy());
+
+        this.susieFollower.setLeader(this.player);
+        this.susieFollower.x = this.player.x - 16;
+        this.susieFollower.y = this.player.y;
+        this.susieFollower.breadcrumbs = [];
+        this.showNotification('Susie joined the party!', 2.0);
       }
     );
   }
@@ -204,12 +233,14 @@ export class Chapter1Story {
       [
         {
           speaker: 'RALSEI',
+          portrait: 'ralsei',
           text: '* Once upon a time, a LEGEND was whispered among shadows...\n* It was the Legend of Delta Rune.',
         },
       ],
       () => {
         this.mode = 'OVERWORLD';
         this.stage = 'RALSEI_JOINED';
+        this.showNotification('Ralsei joined the party!', 2.0);
       }
     );
   }
@@ -226,8 +257,10 @@ export class Chapter1Story {
     this.ralseiFollower.setLeader(this.susieFollower);
     this.susieFollower.x = this.player.x - 16;
     this.susieFollower.y = this.player.y;
+    this.susieFollower.breadcrumbs = [];
     this.ralseiFollower.x = this.player.x - 32;
     this.ralseiFollower.y = this.player.y;
+    this.ralseiFollower.breadcrumbs = [];
 
     this.stage = 'FIELD_EXPLORATION';
   }
@@ -301,11 +334,17 @@ export class Chapter1Story {
   private onLancerBattleEnd(_result: BattleEndResult): void {
     this.greatDoorOpened = true;
     this.stage = 'LANCER_DEFEATED';
+    const town = this.zoneManager.getCurrentZone();
+    const boulder = town.obstacles.find((o) => o.id === 'town_boulder');
+    if (boulder) boulder.destroy();
+    this.synth.playSfx('OBSTACLE_DESTROY');
+
     this.mode = 'DIALOGUE';
     this.dialogueBox.showDialogue(
       [
         {
           speaker: 'LANCER',
+          portrait: 'lancer',
           text: 'Ho ho ho! You haven\'t seen the last of me!',
         },
       ],
@@ -329,6 +368,41 @@ export class Chapter1Story {
   private onKRoundBattleEnd(_result: BattleEndResult): void {
     this.stage = 'K_ROUND_DEFEATED';
     this.mode = 'OVERWORLD';
+  }
+
+  /**
+   * Scarlet Forest Lancer encounter
+   */
+  public triggerForestLancer(): void {
+    this.stage = 'ROUXLS_PUZZLE';
+    this.mode = 'DIALOGUE';
+    this.dialogueBox.showDialogue(
+      [
+        {
+          speaker: 'LANCER',
+          portrait: 'lancer',
+          text: 'Ho ho ho! You survived my checker minion!',
+        },
+        {
+          speaker: 'LANCER',
+          portrait: 'lancer',
+          text: 'Can you survive... my SUPREME FOREST ROADBLOCK?!',
+        },
+        {
+          speaker: 'SUSIE',
+          portrait: 'susie',
+          text: 'Lancer, those are literally just three trees in a line.',
+        },
+        {
+          speaker: 'LANCER',
+          portrait: 'lancer',
+          text: 'And what a magnificent roadblock they make! Ta-ta!',
+        },
+      ],
+      () => {
+        this.mode = 'OVERWORLD';
+      }
+    );
   }
 
   /**
@@ -379,6 +453,7 @@ export class Chapter1Story {
     this.isFountainSealed = false;
     this.whiteoutAlpha = 0;
     this.epilogueText = '';
+    this.transitionCooldown = 0;
     this.greatDoorOpened = false;
     this.fieldSpikesDeactivated = false;
     this.fieldGateLowered = false;
@@ -389,6 +464,64 @@ export class Chapter1Story {
   }
 
   /**
+   * Handles user pressing Action (Z) to inspect world props and signs.
+   */
+  private handleInteraction(pGridX: number, pGridY: number, zoneId: string): void {
+    const facingOffset = {
+      UP: { x: 0, y: -1 },
+      DOWN: { x: 0, y: 1 },
+      LEFT: { x: -1, y: 0 },
+      RIGHT: { x: 1, y: 0 },
+    }[this.player.facing];
+
+    const targetX = pGridX + facingOffset.x;
+    const targetY = pGridY + facingOffset.y;
+
+    if (zoneId === ZONE_IDS.CASTLE_TOWN) {
+      if ((targetX === 8 && targetY === 7) || (pGridX === 8 && pGridY === 7)) {
+        if (!this.player.hasSword) {
+          this.interactSwordPedestal();
+        }
+      }
+    } else if (zoneId === ZONE_IDS.FIELD) {
+      if ((targetX === 2 && targetY === 6) || (pGridX === 2 && pGridY === 6)) {
+        this.mode = 'DIALOGUE';
+        this.dialogueBox.showDialogue([
+          {
+            speaker: 'NARRATOR',
+            text: '* [ROYAL PLAQUE] "To unlock the force field, step upon the symbols of fate: SPADE, HEART, DIAMOND."',
+          },
+        ], () => {
+          this.mode = 'OVERWORLD';
+        });
+      }
+    } else if (zoneId === ZONE_IDS.FOREST) {
+      if ((targetX === 4 && targetY === 5) || (pGridX === 4 && pGridY === 5)) {
+        this.mode = 'DIALOGUE';
+        this.dialogueBox.showDialogue([
+          {
+            speaker: 'NARRATOR',
+            text: '* [TREE CARVING] "DARK DUO HQ - EVIL BOYS ONLY! (Signed: Lancer & Susie)"',
+          },
+          {
+            speaker: 'SUSIE',
+            portrait: 'susie',
+            text: '...Hey, I never agreed to that club name!',
+          },
+        ], () => {
+          this.mode = 'OVERWORLD';
+        });
+      }
+    } else if (zoneId === ZONE_IDS.CASTLE) {
+      if ((targetX === 8 && targetY <= 1) || (pGridX === 8 && pGridY <= 1)) {
+        if (this.stage === 'KING_DEFEATED') {
+          this.sealDarkFountain();
+        }
+      }
+    }
+  }
+
+  /**
    * Main story tick update.
    */
   public update(dt: number, inputOverride?: InputManager): void {
@@ -396,6 +529,9 @@ export class Chapter1Story {
 
     if (this.notificationTimer > 0) {
       this.notificationTimer = Math.max(0, this.notificationTimer - dt);
+    }
+    if (this.transitionCooldown > 0) {
+      this.transitionCooldown = Math.max(0, this.transitionCooldown - dt);
     }
 
     // 1. Epilogue Phase
@@ -438,8 +574,18 @@ export class Chapter1Story {
     if (this.player.hasSword && (this.stage === 'PROLOGUE' || this.stage === 'MET_SUSIE')) {
       this.stage = 'SWORD_PULLED';
       if (this.player.lv < 3) {
-        this.player.lv = 3; // unlock high-level obstacle destruction
+        this.player.lv = 3;
       }
+      this.mode = 'DIALOGUE';
+      this.dialogueBox.showDialogue([
+        {
+          speaker: 'NARRATOR',
+          text: '* Kris obtained the WOOD BLADE!\n* Kris is now ARMED! (Press Z to slash obstacles and strike in battle!)',
+        },
+      ], () => {
+        this.mode = 'OVERWORLD';
+      });
+      return;
     }
 
     // Update active followers
@@ -451,24 +597,50 @@ export class Chapter1Story {
       this.ralseiFollower.update(dt, currentZone.tilemap, leader);
     }
 
-    // Zone Interactive Triggers
     const pGridX = Math.floor((this.player.x + 8) / TILE_SIZE);
     const pGridY = Math.floor((this.player.y + 8) / TILE_SIZE);
 
+    // Slide Slope Speed Boost in Dark Cliffs
     if (currentZone.id === ZONE_IDS.CLIFFS) {
-      if (this.stage === 'PROLOGUE' && pGridX >= 9 && pGridY >= 6) {
+      const tile = currentZone.tilemap.getTile(pGridX, pGridY);
+      if (tile?.type === 'SLIDE_SLOPE') {
+        this.player.vx = Math.max(this.player.vx, 120);
+      }
+    }
+
+    // Universal Inspection Trigger
+    if (activeInput?.isJustPressed('action')) {
+      this.handleInteraction(pGridX, pGridY, currentZone.id);
+      if (this.mode !== 'OVERWORLD') {
+        return;
+      }
+    }
+
+    // Zone Interactive Encounters & Progressions
+    if (currentZone.id === ZONE_IDS.CLIFFS) {
+      if (this.stage === 'PROLOGUE' && pGridX >= 8) {
         this.triggerSusieDialogue();
       }
     } else if (currentZone.id === ZONE_IDS.CASTLE_TOWN) {
-      if (!this.player.hasSword && pGridX === 8 && pGridY === 7) {
-        if (activeInput?.isJustPressed('action')) {
-          this.interactSwordPedestal();
-        }
-      }
-      if (this.player.hasSword && !this.isRalseiInParty && pGridX >= 9) {
+      if (!this.player.hasSword && pGridX >= 9) {
+        // Susie reminds Kris to get the sword
+        this.player.x = 7 * TILE_SIZE;
+        this.mode = 'DIALOGUE';
+        this.dialogueBox.showDialogue(
+          [
+            {
+              speaker: 'SUSIE',
+              portrait: 'susie',
+              text: 'Hey Kris, you blind? There\'s a shiny sword on that pedestal! Go grab it!',
+            },
+          ],
+          () => {
+            this.mode = 'OVERWORLD';
+          }
+        );
+      } else if (this.player.hasSword && !this.isRalseiInParty && pGridX >= 9) {
         this.meetRalsei();
-      }
-      if (this.stage === 'RALSEI_JOINED' && pGridX >= 12) {
+      } else if (this.stage === 'RALSEI_JOINED' && pGridX >= 12) {
         this.startLancerBattle();
       }
     } else if (currentZone.id === ZONE_IDS.FIELD) {
@@ -476,19 +648,24 @@ export class Chapter1Story {
       this.boxPuzzle.update(this.player, currentZone.tilemap);
 
       if (
-        (this.stage === 'SUIT_PUZZLE_SOLVED' || this.stage === 'BOX_PUZZLE_SOLVED' || this.stage === 'FIELD_EXPLORATION') &&
+        (this.stage === 'BOX_PUZZLE_SOLVED' || this.fieldGateLowered) &&
         pGridX >= 11 &&
-        pGridY === 7
+        pGridY >= 6 &&
+        pGridY <= 8
       ) {
         this.startKRoundBattle();
       }
+    } else if (currentZone.id === ZONE_IDS.FOREST) {
+      if (this.stage === 'K_ROUND_DEFEATED' && pGridX >= 6) {
+        this.triggerForestLancer();
+      }
     } else if (currentZone.id === ZONE_IDS.CASTLE) {
-      if (this.stage === 'K_ROUND_DEFEATED' && pGridX >= 3 && pGridY >= 4) {
+      if (this.stage === 'ROUXLS_PUZZLE' && pGridX >= 4 && pGridY >= 5) {
         this.startRouxlsPuzzle();
       }
       this.rouxlsPuzzle.update(this.player, currentZone.tilemap);
 
-      if ((this.stage === 'ROUXLS_SOLVED' || this.stage === 'K_ROUND_DEFEATED') && pGridX === 8 && pGridY <= 2) {
+      if (this.stage === 'ROUXLS_SOLVED' && pGridX >= 7 && pGridX <= 9 && pGridY <= 3) {
         this.startKingBattle();
       }
 
@@ -498,31 +675,50 @@ export class Chapter1Story {
     }
 
     // Zone Transitions
-    const transition = this.zoneManager.checkTransition(pGridX, pGridY);
-    if (transition) {
-      let allowTransition = true;
-      if (
-        currentZone.id === ZONE_IDS.CASTLE_TOWN &&
-        transition.targetZoneId === ZONE_IDS.FIELD &&
-        !this.greatDoorOpened
-      ) {
-        allowTransition = false;
-      }
-      if (allowTransition) {
-        this.zoneManager.triggerTransition(
-          transition.targetZoneId,
-          transition.targetSpawnX,
-          transition.targetSpawnY
-        );
-        this.player.x = transition.targetSpawnX * TILE_SIZE;
-        this.player.y = transition.targetSpawnY * TILE_SIZE;
+    if (this.transitionCooldown <= 0) {
+      const transition = this.zoneManager.checkTransition(
+        pGridX,
+        pGridY,
+        this.player.facing,
+        this.player.vx
+      );
+      if (transition) {
+        let allowTransition = true;
+        if (
+          currentZone.id === ZONE_IDS.CASTLE_TOWN &&
+          transition.targetZoneId === ZONE_IDS.FIELD &&
+          !this.greatDoorOpened
+        ) {
+          allowTransition = false;
+        }
+        if (
+          currentZone.id === ZONE_IDS.FIELD &&
+          transition.targetZoneId === ZONE_IDS.FOREST &&
+          this.stage !== 'K_ROUND_DEFEATED' &&
+          this.stage !== 'ROUXLS_PUZZLE' &&
+          this.stage !== 'ROUXLS_SOLVED' &&
+          this.stage !== 'KING_DEFEATED' &&
+          this.stage !== 'FOUNTAIN_EPILOGUE'
+        ) {
+          allowTransition = false;
+        }
+        if (allowTransition) {
+          this.transitionCooldown = 0.5;
+          this.zoneManager.triggerTransition(
+            transition.targetZoneId,
+            transition.targetSpawnX,
+            transition.targetSpawnY
+          );
+          this.player.x = transition.targetSpawnX * TILE_SIZE;
+          this.player.y = transition.targetSpawnY * TILE_SIZE;
 
-        if (transition.targetZoneId === ZONE_IDS.FIELD && !this.isSusieInParty) {
-          this.enterField();
-        } else if (transition.targetZoneId === ZONE_IDS.FOREST) {
-          this.enterForest();
-        } else if (transition.targetZoneId === ZONE_IDS.CASTLE) {
-          this.enterCastle();
+          if (transition.targetZoneId === ZONE_IDS.FIELD) {
+            this.enterField();
+          } else if (transition.targetZoneId === ZONE_IDS.FOREST) {
+            this.enterForest();
+          } else if (transition.targetZoneId === ZONE_IDS.CASTLE) {
+            this.enterCastle();
+          }
         }
       }
     }
@@ -617,20 +813,35 @@ export class Chapter1Story {
         }
       }
       if (!this.greatDoorOpened) {
-        // The Great Door blocking east exit (15, 7)
+        // The Great Door blocking east exit (15, 6..8)
         renderer.drawRect(15 * TILE_SIZE, 6 * TILE_SIZE, TILE_SIZE, TILE_SIZE * 3, '#3B2B4E');
         renderer.drawRect(15 * TILE_SIZE, 6 * TILE_SIZE, TILE_SIZE, TILE_SIZE * 3, NES_COLORS.GOLD_ACCENT, false);
       }
     } else if (currentZone.id === ZONE_IDS.FIELD) {
       this.suitPuzzle.render(renderer);
       this.boxPuzzle.render(renderer);
-
-      if (!this.fieldSpikesDeactivated) {
-        // Electric spike barrier at east path
-        renderer.drawRect(14 * TILE_SIZE, 6 * TILE_SIZE, 6, TILE_SIZE * 3, '#FFE040');
-      }
     } else if (currentZone.id === ZONE_IDS.CASTLE) {
       this.rouxlsPuzzle.render(renderer);
+
+      // Rouxls Kaard NPC standing before gate if not yet solved
+      if (!this.castleGateOpened) {
+        if (SpriteLoader.has('ch3_rouxls') && SpriteLoader.getSpriteInfo('ch3_rouxls')?.loaded) {
+          SpriteLoader.draw(renderer.ctx, 'ch3_rouxls', 8 * TILE_SIZE, 5 * TILE_SIZE, 16, 16);
+        } else {
+          renderer.drawRect(8 * TILE_SIZE, 5 * TILE_SIZE, 16, 16, '#2980B9');
+          renderer.drawText('RK', 8 * TILE_SIZE + 1, 5 * TILE_SIZE + 4, { color: NES_COLORS.WHITE, size: 7 });
+        }
+      }
+
+      // Chaos King on throne before Dark Fountain
+      if (this.stage !== 'KING_DEFEATED' && this.stage !== 'FOUNTAIN_EPILOGUE' && this.stage !== 'COMPLETED') {
+        if (SpriteLoader.has('ch3_king') && SpriteLoader.getSpriteInfo('ch3_king')?.loaded) {
+          SpriteLoader.draw(renderer.ctx, 'ch3_king', 8 * TILE_SIZE - 8, 2 * TILE_SIZE - 4, 32, 32);
+        } else {
+          renderer.drawRect(8 * TILE_SIZE - 4, 2 * TILE_SIZE, 24, 24, '#1C2833');
+          renderer.drawText('KING', 8 * TILE_SIZE - 2, 2 * TILE_SIZE + 8, { color: NES_COLORS.GOLD_ACCENT, size: 6 });
+        }
+      }
 
       // Dark Fountain in throne room
       renderer.drawRect(8 * TILE_SIZE - 4, 0, 24, 24, '#40C0E0');

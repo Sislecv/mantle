@@ -158,13 +158,38 @@ export class ZoneManager {
    * Checks whether the current grid coordinate contains a transition point.
    * Tolerant to border tile alignment so players hitting map boundaries transition smoothly.
    */
-  public checkTransition(gridX: number, gridY: number): ZoneTransition | null {
+  /**
+   * Checks whether the current grid coordinate contains a transition point.
+   * Tolerant to border tile alignment so players hitting map boundaries transition smoothly.
+   */
+  public checkTransition(
+    gridX: number,
+    gridY: number,
+    facing?: string,
+    vx?: number
+  ): ZoneTransition | null {
     const current = this.getCurrentZone();
     for (const tr of current.transitions) {
-      const matchX = tr.gridX === gridX || (tr.gridX === 15 && gridX >= 14) || (tr.gridX === 0 && gridX <= 1);
-      const matchY = Math.abs(tr.gridY - gridY) <= 1;
-      if (matchX && matchY) {
-        return tr;
+      if (tr.gridX === 15) {
+        // East exit
+        const matchY = Math.abs(tr.gridY - gridY) <= 1;
+        const onEdge = gridX >= 14;
+        const movingEast = !facing || facing === 'RIGHT' || (vx !== undefined && vx > 0);
+        if (onEdge && matchY && movingEast) {
+          return tr;
+        }
+      } else if (tr.gridX === 0) {
+        // West exit
+        const matchY = Math.abs(tr.gridY - gridY) <= 1;
+        const onEdge = gridX <= 1;
+        const movingWest = !facing || facing === 'LEFT' || (vx !== undefined && vx < 0);
+        if (onEdge && matchY && movingWest) {
+          return tr;
+        }
+      } else {
+        if (tr.gridX === gridX && Math.abs(tr.gridY - gridY) <= 1) {
+          return tr;
+        }
       }
     }
     return null;
@@ -296,20 +321,46 @@ export class ZoneManager {
     // Perimeter walls
     this.fillBorderWalls(map, 'WALL_CLIFF');
 
-    // Slide slope feature in center
-    for (let x = 6; x <= 9; x++) {
+    // Slide slope feature in center (rows 6 & 7)
+    for (let x = 5; x <= 8; x++) {
       map.setTile(x, 6, createTile('SLIDE_SLOPE'));
       map.setTile(x, 7, createTile('SLIDE_SLOPE'));
     }
 
-    // East exit to Castle Town
+    // Canyon rock walls funneling to gate at (12, 7)
+    for (let y = 1; y <= 5; y++) {
+      map.setTile(12, y, createTile('WALL_CLIFF'));
+    }
+    for (let y = 9; y <= 13; y++) {
+      map.setTile(12, y, createTile('WALL_CLIFF'));
+    }
+
+    // East exit to Castle Town (rows 6, 7, 8)
+    map.setTile(15, 6, createTile('FLOOR_CLIFF', { triggerId: 'to_castle_town' }));
     map.setTile(15, 7, createTile('FLOOR_CLIFF', { triggerId: 'to_castle_town' }));
+    map.setTile(15, 8, createTile('FLOOR_CLIFF', { triggerId: 'to_castle_town' }));
 
     const obstacles: DestructibleObstacle[] = [
       new DestructibleObstacle({
         id: 'cliffs_gate_1',
         gridX: 12,
         gridY: 7,
+        type: 'WOOD_GATE',
+        requiredLv: 1,
+        requiredSword: false,
+      }),
+      new DestructibleObstacle({
+        id: 'cliffs_gate_top',
+        gridX: 12,
+        gridY: 6,
+        type: 'WOOD_GATE',
+        requiredLv: 1,
+        requiredSword: false,
+      }),
+      new DestructibleObstacle({
+        id: 'cliffs_gate_bottom',
+        gridX: 12,
+        gridY: 8,
         type: 'WOOD_GATE',
         requiredLv: 1,
         requiredSword: false,
@@ -321,7 +372,7 @@ export class ZoneManager {
         gridX: 15,
         gridY: 7,
         targetZoneId: ZONE_IDS.CASTLE_TOWN,
-        targetSpawnX: 1,
+        targetSpawnX: 2,
         targetSpawnY: 7,
       },
     ];
@@ -345,14 +396,18 @@ export class ZoneManager {
     const map = new Tilemap(16, 15, TILES.FLOOR_CLIFF);
     this.fillBorderWalls(map, 'WALL_CASTLE');
 
-    // West entrance from Cliffs
+    // West entrance from Cliffs (rows 6, 7, 8)
+    map.setTile(0, 6, createTile('FLOOR_CLIFF', { triggerId: 'to_cliffs' }));
     map.setTile(0, 7, createTile('FLOOR_CLIFF', { triggerId: 'to_cliffs' }));
+    map.setTile(0, 8, createTile('FLOOR_CLIFF', { triggerId: 'to_cliffs' }));
 
     // Center sword pedestal area
     map.setTile(8, 7, createTile('FLOOR_CHECKER_LIGHT', { symbol: '†', triggerId: 'pedestal_sword' }));
 
-    // East exit to Field
+    // East exit to Field (rows 6, 7, 8)
+    map.setTile(15, 6, createTile('FLOOR_CLIFF', { triggerId: 'to_field' }));
     map.setTile(15, 7, createTile('FLOOR_CLIFF', { triggerId: 'to_field' }));
+    map.setTile(15, 8, createTile('FLOOR_CLIFF', { triggerId: 'to_field' }));
 
     const obstacles: DestructibleObstacle[] = [
       new DestructibleObstacle({
@@ -370,14 +425,14 @@ export class ZoneManager {
         gridX: 0,
         gridY: 7,
         targetZoneId: ZONE_IDS.CLIFFS,
-        targetSpawnX: 14,
+        targetSpawnX: 13,
         targetSpawnY: 7,
       },
       {
         gridX: 15,
         gridY: 7,
         targetZoneId: ZONE_IDS.FIELD,
-        targetSpawnX: 1,
+        targetSpawnX: 2,
         targetSpawnY: 7,
       },
     ];
@@ -387,7 +442,7 @@ export class ZoneManager {
       name: 'Castle Town',
       tilemap: map,
       obstacles,
-      spawnX: 1,
+      spawnX: 2,
       spawnY: 7,
       transitions,
     };
@@ -412,25 +467,80 @@ export class ZoneManager {
     // Border walls
     this.fillBorderWalls(map, 'WALL_CLIFF');
 
-    // West entrance from Castle Town
+    // West entrance from Castle Town (rows 6, 7, 8)
+    map.setTile(0, 6, createTile('FLOOR_CHECKER_LIGHT', { triggerId: 'to_castle_town' }));
     map.setTile(0, 7, createTile('FLOOR_CHECKER_LIGHT', { triggerId: 'to_castle_town' }));
+    map.setTile(0, 8, createTile('FLOOR_CHECKER_LIGHT', { triggerId: 'to_castle_town' }));
 
-    // Water obstacle in upper area
-    for (let x = 5; x <= 10; x++) {
+    // Hint sign for Suit Plate puzzle at (2, 6)
+    map.setTile(2, 6, createTile('FLOOR_CHECKER_LIGHT', { symbol: '§', triggerId: 'suit_hint' }));
+
+    // Barrier wall partition 1 (column 6, gating Suit puzzle)
+    for (let y = 1; y <= 5; y++) {
+      map.setTile(6, y, createTile('WALL_CLIFF'));
+    }
+    for (let y = 9; y <= 13; y++) {
+      map.setTile(6, y, createTile('WALL_CLIFF'));
+    }
+
+    // Barrier wall partition 2 (column 10, gating Box puzzle)
+    for (let y = 1; y <= 5; y++) {
+      map.setTile(10, y, createTile('WALL_CLIFF'));
+    }
+    for (let y = 9; y <= 13; y++) {
+      map.setTile(10, y, createTile('WALL_CLIFF'));
+    }
+
+    // Water hazard in upper area
+    for (let x = 7; x <= 9; x++) {
+      map.setTile(x, 2, createTile('WATER'));
       map.setTile(x, 3, createTile('WATER'));
     }
 
-    // East exit to Scarlet Forest
+    // East exit to Scarlet Forest (rows 6, 7, 8)
+    map.setTile(15, 6, createTile('FLOOR_CHECKER_LIGHT', { triggerId: 'to_forest' }));
     map.setTile(15, 7, createTile('FLOOR_CHECKER_LIGHT', { triggerId: 'to_forest' }));
+    map.setTile(15, 8, createTile('FLOOR_CHECKER_LIGHT', { triggerId: 'to_forest' }));
 
     const obstacles: DestructibleObstacle[] = [
+      // Suit Puzzle Electric Spike Barrier (column 6, rows 6..8)
       new DestructibleObstacle({
-        id: 'field_tree_1',
+        id: 'field_spike_1',
+        gridX: 6,
+        gridY: 6,
+        type: 'SPIKE_BARRIER',
+      }),
+      new DestructibleObstacle({
+        id: 'field_spike_2',
+        gridX: 6,
+        gridY: 7,
+        type: 'SPIKE_BARRIER',
+      }),
+      new DestructibleObstacle({
+        id: 'field_spike_3',
+        gridX: 6,
+        gridY: 8,
+        type: 'SPIKE_BARRIER',
+      }),
+
+      // Box Puzzle Iron Gate (column 10, rows 6..8)
+      new DestructibleObstacle({
+        id: 'field_gate_1',
+        gridX: 10,
+        gridY: 6,
+        type: 'IRON_GATE',
+      }),
+      new DestructibleObstacle({
+        id: 'field_gate_2',
         gridX: 10,
         gridY: 7,
-        type: 'TREE',
-        requiredLv: 2,
-        requiredSword: true,
+        type: 'IRON_GATE',
+      }),
+      new DestructibleObstacle({
+        id: 'field_gate_3',
+        gridX: 10,
+        gridY: 8,
+        type: 'IRON_GATE',
       }),
     ];
 
@@ -439,14 +549,14 @@ export class ZoneManager {
         gridX: 0,
         gridY: 7,
         targetZoneId: ZONE_IDS.CASTLE_TOWN,
-        targetSpawnX: 14,
+        targetSpawnX: 13,
         targetSpawnY: 7,
       },
       {
         gridX: 15,
         gridY: 7,
         targetZoneId: ZONE_IDS.FOREST,
-        targetSpawnX: 1,
+        targetSpawnX: 2,
         targetSpawnY: 7,
       },
     ];
@@ -456,7 +566,7 @@ export class ZoneManager {
       name: 'Field of Hopes and Dreams',
       tilemap: map,
       obstacles,
-      spawnX: 1,
+      spawnX: 2,
       spawnY: 7,
       transitions,
     };
@@ -470,15 +580,22 @@ export class ZoneManager {
     const map = new Tilemap(16, 15, TILES.FLOOR_CLIFF);
     this.fillBorderWalls(map, 'WALL_CLIFF');
 
-    // West entrance from Field
+    // West entrance from Field (rows 6, 7, 8)
+    map.setTile(0, 6, createTile('FLOOR_CLIFF', { triggerId: 'to_field' }));
     map.setTile(0, 7, createTile('FLOOR_CLIFF', { triggerId: 'to_field' }));
+    map.setTile(0, 8, createTile('FLOOR_CLIFF', { triggerId: 'to_field' }));
+
+    // Tree carving sign at (4, 5)
+    map.setTile(4, 5, createTile('FLOOR_CLIFF', { symbol: '¶', triggerId: 'forest_sign' }));
 
     // Spurt spikes hazard
-    map.setTile(5, 5, createTile('SPURT_SPIKES'));
-    map.setTile(5, 6, createTile('SPURT_SPIKES'));
+    map.setTile(5, 3, createTile('SPURT_SPIKES'));
+    map.setTile(5, 4, createTile('SPURT_SPIKES'));
 
-    // East exit to Card Castle
+    // East exit to Card Castle (rows 6, 7, 8)
+    map.setTile(15, 6, createTile('FLOOR_CLIFF', { triggerId: 'to_castle' }));
     map.setTile(15, 7, createTile('FLOOR_CLIFF', { triggerId: 'to_castle' }));
+    map.setTile(15, 8, createTile('FLOOR_CLIFF', { triggerId: 'to_castle' }));
 
     const obstacles: DestructibleObstacle[] = [
       new DestructibleObstacle({
@@ -490,16 +607,24 @@ export class ZoneManager {
         requiredSword: true,
       }),
       new DestructibleObstacle({
-        id: 'forest_tree_2',
-        gridX: 10,
-        gridY: 4,
+        id: 'forest_tree_top',
+        gridX: 7,
+        gridY: 6,
+        type: 'TREE',
+        requiredLv: 2,
+        requiredSword: true,
+      }),
+      new DestructibleObstacle({
+        id: 'forest_tree_bottom',
+        gridX: 7,
+        gridY: 8,
         type: 'TREE',
         requiredLv: 2,
         requiredSword: true,
       }),
       new DestructibleObstacle({
         id: 'forest_boulder_1',
-        gridX: 12,
+        gridX: 11,
         gridY: 7,
         type: 'BOULDER',
         requiredLv: 3,
@@ -512,14 +637,14 @@ export class ZoneManager {
         gridX: 0,
         gridY: 7,
         targetZoneId: ZONE_IDS.FIELD,
-        targetSpawnX: 14,
+        targetSpawnX: 13,
         targetSpawnY: 7,
       },
       {
         gridX: 15,
         gridY: 7,
         targetZoneId: ZONE_IDS.CASTLE,
-        targetSpawnX: 1,
+        targetSpawnX: 2,
         targetSpawnY: 7,
       },
     ];
@@ -529,7 +654,7 @@ export class ZoneManager {
       name: 'Scarlet Forest',
       tilemap: map,
       obstacles,
-      spawnX: 1,
+      spawnX: 2,
       spawnY: 7,
       transitions,
     };
@@ -543,28 +668,35 @@ export class ZoneManager {
     const map = new Tilemap(16, 15, TILES.FLOOR_CLIFF);
     this.fillBorderWalls(map, 'WALL_CASTLE');
 
-    // West entrance from Scarlet Forest
+    // West entrance from Scarlet Forest (rows 6, 7, 8)
+    map.setTile(0, 6, createTile('FLOOR_CLIFF', { triggerId: 'to_forest' }));
     map.setTile(0, 7, createTile('FLOOR_CLIFF', { triggerId: 'to_forest' }));
+    map.setTile(0, 8, createTile('FLOOR_CLIFF', { triggerId: 'to_forest' }));
 
-    // Castle throne or dungeon entrance at North
-    map.setTile(8, 0, createTile('FLOOR_CLIFF', { triggerId: 'throne_room' }));
+    // Royal corridor partition wall at row 4 leading to Throne Room
+    for (let x = 1; x <= 6; x++) {
+      map.setTile(x, 4, createTile('WALL_CASTLE'));
+    }
+    for (let x = 10; x <= 14; x++) {
+      map.setTile(x, 4, createTile('WALL_CASTLE'));
+    }
+
+    // Throne room doorway at (7..9, 4)
+    map.setTile(7, 4, createTile('WALL_CASTLE'));
+    map.setTile(9, 4, createTile('WALL_CASTLE'));
+    map.setTile(8, 4, createTile('FLOOR_CLIFF'));
+
+    // Dark Fountain in throne room at (8, 0)
+    map.setTile(8, 0, createTile('FLOOR_CLIFF', { triggerId: 'dark_fountain' }));
 
     const obstacles: DestructibleObstacle[] = [
       new DestructibleObstacle({
         id: 'castle_gate_1',
         gridX: 8,
         gridY: 4,
-        type: 'WOOD_GATE',
-        requiredLv: 1,
-        requiredSword: true,
-      }),
-      new DestructibleObstacle({
-        id: 'castle_boulder_1',
-        gridX: 8,
-        gridY: 10,
-        type: 'BOULDER',
-        requiredLv: 3,
-        requiredSword: true,
+        type: 'IRON_GATE',
+        requiredLv: 99,
+        requiredSword: false,
       }),
     ];
 
@@ -573,7 +705,7 @@ export class ZoneManager {
         gridX: 0,
         gridY: 7,
         targetZoneId: ZONE_IDS.FOREST,
-        targetSpawnX: 14,
+        targetSpawnX: 13,
         targetSpawnY: 7,
       },
     ];
@@ -583,7 +715,7 @@ export class ZoneManager {
       name: 'Card Castle',
       tilemap: map,
       obstacles,
-      spawnX: 1,
+      spawnX: 2,
       spawnY: 7,
       transitions,
     };

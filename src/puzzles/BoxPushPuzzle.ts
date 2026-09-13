@@ -185,7 +185,13 @@ export class BoxPushPuzzle extends Puzzle {
         }
 
         if (dirX !== 0 || dirY !== 0) {
-          this.pushCrate(crate.id, dirX, dirY, tilemap);
+          const moved = this.pushCrate(crate.id, dirX, dirY, tilemap);
+          if (!moved) {
+            if (dirX > 0) player.x = crate.x - pBounds.width;
+            else if (dirX < 0) player.x = crate.x + crate.width;
+            else if (dirY > 0) player.y = crate.y - pBounds.height;
+            else if (dirY < 0) player.y = crate.y + crate.height;
+          }
         }
       }
     }

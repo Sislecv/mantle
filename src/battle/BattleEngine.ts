@@ -73,6 +73,7 @@ export class BattleEngine {
   // End Phase Callbacks & Timers
   public onBattleEnd?: (result: BattleEndResult) => void;
   public victoryTimer: number = 0;
+  public battleEndTriggered: boolean = false;
 
   private synth: ChiptuneSynth | null;
 
@@ -109,6 +110,7 @@ export class BattleEngine {
   public startBattle(bossConfig: BossConfig, onEnd?: (result: BattleEndResult) => void): void {
     this.currentBoss = bossConfig;
     this.onBattleEnd = onEnd;
+    this.battleEndTriggered = false;
     this.state = 'MENU';
     this.selectedMenuIndex = 0;
     this.selectedSubmenuIndex = 0;
@@ -388,7 +390,8 @@ export class BattleEngine {
     }
 
     if (this.victoryTimer <= 0 || input.isJustPressed('action')) {
-      if (this.onBattleEnd && this.battleResult) {
+      if (!this.battleEndTriggered && this.onBattleEnd && this.battleResult) {
+        this.battleEndTriggered = true;
         this.onBattleEnd(this.battleResult);
       }
     }

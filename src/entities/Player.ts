@@ -528,11 +528,35 @@ export class Player extends Entity {
   }
 
   /**
-   * Default Kris standing / walking pose using authentic 8-bit sprite.
-   */
+  * Default Kris standing / walking pose using authentic 8-bit sprite.
+  */
   private renderDefault(renderer: Renderer, x: number, y: number): void {
     const isMoving = this.vx !== 0 || this.vy !== 0;
     const isLeft = this.facing === 'LEFT';
+    const isRight = this.facing === 'RIGHT';
+    const isUp = this.facing === 'UP';
+    const frame = isMoving ? (Math.floor(Date.now() / 150) % 2) : 0;
+
+    let spriteKey = 'ch3_kris_down_0';
+    let flipX = false;
+
+    if (isUp) {
+      spriteKey = `ch3_kris_up_${frame}`;
+    } else if (isLeft) {
+      spriteKey = `ch3_kris_left_${frame}`;
+    } else if (isRight) {
+      spriteKey = `ch3_kris_left_${frame}`;
+      flipX = true;
+    } else {
+      spriteKey = 'ch3_kris_down_0';
+    }
+
+    if (SpriteLoader.has(spriteKey) && SpriteLoader.getSpriteInfo(spriteKey)?.loaded) {
+      SpriteLoader.draw(renderer.ctx, spriteKey, x, y, this.width, this.height, {
+        flipX,
+      });
+      return;
+    }
 
     if (SpriteLoader.has('kris_walk') && SpriteLoader.getSpriteInfo('kris_walk')?.loaded) {
       SpriteLoader.draw(renderer.ctx, 'kris_walk', x, y, this.width, this.height, {
@@ -545,19 +569,20 @@ export class Player extends Entity {
           renderer.drawRect(x + (isLeft ? 3 : 9), y + 14, 2, 2, '#101828');
         }
       }
-    } else {
-      // Fallback pixel rendering
-      renderer.drawRect(x + 4, y, 8, 4, '#241738');
-      renderer.drawRect(x + 3, y + 2, 10, 3, '#241738');
-      renderer.drawRect(x + 5, y + 4, 6, 3, '#82E0AA');
-      renderer.drawRect(x + 4, y + 7, 8, 2, NES_COLORS.KRIS_CAPE);
-      renderer.drawRect(x + 4, y + 9, 8, 4, NES_COLORS.KRIS_CYAN);
-      renderer.drawRect(x + 4, y + 13, 3, 3, '#192841');
-      renderer.drawRect(x + 9, y + 13, 3, 3, '#192841');
+      return;
     }
 
+    // Fallback pixel rendering
+    renderer.drawRect(x + 4, y, 8, 4, '#241738');
+    renderer.drawRect(x + 3, y + 2, 10, 3, '#241738');
+    renderer.drawRect(x + 5, y + 4, 6, 3, '#82E0AA');
+    renderer.drawRect(x + 4, y + 7, 8, 2, NES_COLORS.KRIS_CAPE);
+    renderer.drawRect(x + 4, y + 9, 8, 4, NES_COLORS.KRIS_CYAN);
+    renderer.drawRect(x + 4, y + 13, 3, 3, '#192841');
+    renderer.drawRect(x + 9, y + 13, 3, 3, '#192841');
+
     // Sword at hip if ARMED
-    if (this.hasSword && (!SpriteLoader.has('kris_walk') || !SpriteLoader.getSpriteInfo('kris_walk')?.loaded)) {
+    if (this.hasSword) {
       if (this.facing === 'LEFT') {
         renderer.drawRect(x + 12, y + 8, 2, 6, '#FFFFFF');
       } else {
@@ -570,6 +595,31 @@ export class Player extends Entity {
    * 5-Frame sword slash animation with authentic 8-bit sprite.
    */
   private renderAttack(renderer: Renderer, x: number, y: number): void {
+    const strikeFrameIndex = Math.min(2, this.attackFrame);
+    let strikeKey = '';
+    let sx = x;
+    let sy = y;
+    let sw = this.width;
+    let sh = this.height;
+
+    if (this.facing === 'RIGHT') {
+      strikeKey = `ch3_kris_strike_right_${strikeFrameIndex}`;
+      sw = 32;
+    } else if (this.facing === 'LEFT') {
+      strikeKey = `ch3_kris_strike_left_${strikeFrameIndex}`;
+      sw = 32;
+      sx = x - 16;
+    } else if (this.facing === 'UP') {
+      strikeKey = `ch3_kris_strike_up_0`;
+      sh = 32;
+      sy = y - 16;
+    }
+
+    if (strikeKey && SpriteLoader.has(strikeKey) && SpriteLoader.getSpriteInfo(strikeKey)?.loaded) {
+      SpriteLoader.draw(renderer.ctx, strikeKey, sx, sy, sw, sh);
+      return;
+    }
+
     const isLeft = this.facing === 'LEFT';
     if (SpriteLoader.has('kris_attack') && SpriteLoader.getSpriteInfo('kris_attack')?.loaded) {
       SpriteLoader.draw(renderer.ctx, 'kris_attack', x, y, this.width, this.height, {

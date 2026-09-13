@@ -536,8 +536,10 @@ export class Chapter1Story {
     if (currentZone.id === ZONE_IDS.CLIFFS) {
       if (!this.isSusieInParty) {
         // Susie NPC waiting at slope base (9, 7)
-        if (SpriteLoader.has('susie') && SpriteLoader.getSpriteInfo('susie')?.loaded) {
-          SpriteLoader.draw(renderer.ctx, 'susie', 9 * TILE_SIZE, 7 * TILE_SIZE - 4, 16, 24);
+        if (SpriteLoader.has('ch3_susie_down_0') && SpriteLoader.getSpriteInfo('ch3_susie_down_0')?.loaded) {
+          SpriteLoader.draw(renderer.ctx, 'ch3_susie_down_0', 9 * TILE_SIZE, 7 * TILE_SIZE, 16, 16);
+        } else if (SpriteLoader.has('susie') && SpriteLoader.getSpriteInfo('susie')?.loaded) {
+          SpriteLoader.draw(renderer.ctx, 'susie', 9 * TILE_SIZE, 7 * TILE_SIZE, 16, 16);
         } else {
           renderer.drawRect(9 * TILE_SIZE, 7 * TILE_SIZE, TILE_SIZE, TILE_SIZE, NES_COLORS.SUSIE_MAGENTA);
           renderer.drawText('S', 9 * TILE_SIZE + 4, 7 * TILE_SIZE + 4, {

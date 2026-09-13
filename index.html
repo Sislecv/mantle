@@ -28,128 +28,129 @@
       -webkit-user-select: none;
     }
 
-    /* Wooden CRT TV Console Bezel */
-    .tv-cabinet {
+    /* Deltarune Dark World 8-Bit Arcade Monitor */
+    .dark-monitor {
       position: relative;
-      padding: 24px 28px 20px;
-      background: linear-gradient(145deg, #3d2218 0%, #20110b 50%, #170c07 100%);
-      border: 5px solid #140b07;
-      border-radius: 18px;
+      padding: 10px 12px 12px;
+      background: #0f0b18;
+      border: 3px solid #ffffff;
+      outline: 3px solid #000000;
+      border-radius: 6px;
       box-shadow: 
-        0 15px 40px rgba(0, 0, 0, 0.95),
-        inset 0 2px 4px rgba(255, 200, 150, 0.25),
-        inset 0 -3px 8px rgba(0, 0, 0, 0.85);
+        0 0 0 1px #2d1c48,
+        0 12px 36px rgba(0, 0, 0, 0.95),
+        0 0 20px rgba(120, 70, 200, 0.2);
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
-    /* TV Cabinet Header / Badge */
-    .tv-header {
+    /* Monitor Header: Authentic Deltarune UI Header */
+    .monitor-header {
       width: 100%;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
       padding: 0 4px;
-    }
-    .tv-badge {
       font-size: 11px;
-      font-weight: bold;
-      letter-spacing: 3px;
-      color: #dfba73;
-      text-shadow: 1px 1px 2px #000;
-      background: linear-gradient(180deg, #382414 0%, #1e1208 100%);
-      padding: 2px 14px;
-      border-radius: 4px;
-      border: 1px solid #735028;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      letter-spacing: 1px;
     }
-    .tv-power-led {
+    .soul-indicator {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 9px;
-      color: #9d8876;
+      gap: 5px;
+      color: #ff3344;
+      font-weight: bold;
+      text-shadow: 0 0 5px #ff2233;
     }
-    .led-bulb {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background-color: #ff3344;
-      box-shadow: 0 0 6px #ff2233;
+    .soul-heart {
+      font-size: 12px;
+      animation: soul-pulse 2s infinite ease-in-out;
+    }
+    @keyframes soul-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); filter: brightness(130%); }
+    }
+    .game-logo {
+      font-weight: bold;
+      color: #ffd700;
+      letter-spacing: 3px;
+      text-shadow: 1px 1px 0 #000;
+    }
+    .chapter-tag {
+      color: #9d8ec2;
+      font-size: 10px;
     }
 
     /* CRT Display Screen Container */
     .crt-container {
       position: relative;
-      padding: 10px;
       background: #000;
-      border: 6px solid #1c1524;
-      border-radius: 10px;
-      box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.95);
+      border: 2px solid #281d3d;
+      border-radius: 4px;
+      box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.95);
+      overflow: hidden;
     }
     .crt-container::after {
       content: " ";
       display: block;
       position: absolute;
-      top: 10px;
-      left: 10px;
-      right: 10px;
-      bottom: 10px;
-      background: linear-gradient(rgba(18, 16, 26, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(rgba(18, 16, 26, 0) 50%, rgba(0, 0, 0, 0.22) 50%),
                   linear-gradient(90deg, rgba(255, 0, 80, 0.02), rgba(0, 255, 100, 0.01), rgba(80, 80, 255, 0.02));
-      background-size: 100% 3px, 6px 100%;
+      background-size: 100% 2px, 4px 100%;
       pointer-events: none;
-      border-radius: 4px;
     }
 
     #game-canvas {
       display: block;
       width: calc(256px * 3);
       height: calc(240px * 3);
-      max-width: 88vw;
+      max-width: 90vw;
       max-height: 52vh;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
       background-color: #000000;
-      border-radius: 4px;
     }
 
-    /* Footer hints & Toggle */
+    /* Footer hints & Controls toggle */
     .footer-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       width: 100%;
-      max-width: calc(256px * 3 + 40px);
-      margin-top: 10px;
-      padding: 0 8px;
+      max-width: calc(256px * 3 + 24px);
+      margin-top: 6px;
+      padding: 0 6px;
     }
     .footer-hint {
-      font-size: 11px;
-      color: #8c81a5;
+      font-size: 10px;
+      color: #a89cc8;
       letter-spacing: 0.5px;
     }
     .gamepad-toggle-btn {
-      background: #251b36;
-      color: #e4d8ff;
-      border: 1px solid #5a457a;
+      background: #1c142b;
+      color: #e0d4fc;
+      border: 1px solid #4a386c;
       border-radius: 4px;
-      padding: 4px 10px;
-      font-size: 11px;
+      padding: 3px 8px;
+      font-size: 10px;
       font-family: monospace;
       cursor: pointer;
     }
     .gamepad-toggle-btn:active {
-      background: #473268;
+      background: #3e2862;
     }
 
-    /* Virtual Gamepad - Authentic NES / Odd Controller Style */
+    /* Virtual Gamepad - Authentic Deltarune Chapter 3 Controller */
     #virtual-gamepad-root {
       width: 100%;
-      max-width: 600px;
-      margin-top: 12px;
+      max-width: 580px;
+      margin-top: 8px;
       display: flex;
       justify-content: center;
     }
@@ -157,76 +158,111 @@
     .virtual-gamepad-container {
       width: 100%;
       display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #110d1c;
+      border: 2px solid #382952;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.85);
+      touch-action: none;
+    }
+
+    /* Top Utility Toolbar */
+    .gamepad-top-toolbar {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      border-bottom: 1px solid #231936;
+      padding-bottom: 6px;
+    }
+    .top-util-btn {
+      background: #1b142c;
+      color: #bcaada;
+      border: 1px solid #3a2c56;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 10px;
+      font-weight: bold;
+      font-family: monospace;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+    }
+    .top-util-btn:active {
+      background: #47326c;
+      color: #ffffff;
+      transform: translateY(1px);
+    }
+
+    /* Gamepad Main Row */
+    .gamepad-main-row {
+      display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 18px;
-      background: linear-gradient(180deg, #241b35 0%, #150f22 100%);
-      border: 3px solid #3c2d58;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), inset 0 2px 0 rgba(255, 255, 255, 0.1);
-      touch-action: none;
+      width: 100%;
     }
 
     /* D-PAD Cross */
     .dpad-container {
       position: relative;
-      width: 128px;
-      height: 128px;
+      width: 120px;
+      height: 120px;
       display: grid;
-      grid-template-columns: 42px 44px 42px;
-      grid-template-rows: 42px 44px 42px;
+      grid-template-columns: 38px 44px 38px;
+      grid-template-rows: 38px 44px 38px;
     }
     .dpad-btn {
-      background: linear-gradient(180deg, #1f182c 0%, #120c1c 100%);
-      border: 2px solid #4a386c;
-      color: #d8c8f8;
-      font-size: 16px;
+      background: #1a1428;
+      border: 2px solid #3f305c;
+      color: #d8c6fa;
+      font-size: 15px;
       display: flex;
       align-items: center;
       justify-content: center;
       user-select: none;
       -webkit-user-select: none;
+      touch-action: none;
       cursor: pointer;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 3px 6px rgba(0,0,0,0.6);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 5px rgba(0,0,0,0.7);
     }
     .dpad-btn:active, .dpad-btn.active {
-      background: #7852a9;
+      background: #5d3d92;
       color: #fff;
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.9);
       transform: translateY(1px);
     }
     .dpad-up {
       grid-column: 2;
       grid-row: 1;
-      border-radius: 8px 8px 0 0;
+      border-radius: 6px 6px 0 0;
       border-bottom: none;
     }
     .dpad-down {
       grid-column: 2;
       grid-row: 3;
-      border-radius: 0 0 8px 8px;
+      border-radius: 0 0 6px 6px;
       border-top: none;
     }
     .dpad-left {
       grid-column: 1;
       grid-row: 2;
-      border-radius: 8px 0 0 8px;
+      border-radius: 6px 0 0 6px;
       border-right: none;
     }
     .dpad-right {
       grid-column: 3;
       grid-row: 2;
-      border-radius: 0 8px 8px 0;
+      border-radius: 0 6px 6px 0;
       border-left: none;
     }
     .dpad-center {
       grid-column: 2;
       grid-row: 2;
-      background: #181224;
+      background: #151022;
       border: none;
     }
 
-    /* Middle Option Buttons */
+    /* Center Menu Button */
     .middle-buttons-container {
       display: flex;
       flex-direction: column;
@@ -234,123 +270,132 @@
       gap: 6px;
     }
     .vbtn-menu {
-      width: 58px;
-      height: 24px;
-      border-radius: 12px;
-      background: linear-gradient(180deg, #302642 0%, #1a1326 100%);
-      border: 1.5px solid #58447a;
-      color: #c0b0e0;
-      font-size: 9px;
-      font-weight: bold;
-      font-family: monospace;
-      letter-spacing: 1px;
+      width: 52px;
+      height: 32px;
+      border-radius: 6px;
+      background: #1f1730;
+      border: 2px solid #48346b;
+      color: #c4b5e6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
       box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+      touch-action: none;
     }
     .vbtn-menu:active, .vbtn-menu.active {
-      background: #62488a;
+      background: #54397e;
       color: #fff;
       transform: translateY(1px);
     }
+    .vbtn-main-label {
+      font-size: 13px;
+      font-weight: bold;
+      line-height: 1;
+    }
+    .vbtn-sub-label {
+      font-size: 7px;
+      letter-spacing: 0.5px;
+      opacity: 0.8;
+      line-height: 1;
+      margin-top: 2px;
+    }
 
-    /* Action Buttons (A & B) */
+    /* Action Buttons (Z & X) */
     .action-buttons-container {
       display: flex;
       align-items: center;
-      gap: 16px;
-      transform: rotate(-12deg);
+      gap: 14px;
+      transform: rotate(-8deg);
     }
     .vbtn {
-      width: 54px;
-      height: 54px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       font-family: monospace;
-      font-weight: bold;
-      font-size: 20px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       user-select: none;
       -webkit-user-select: none;
+      touch-action: none;
       cursor: pointer;
-      box-shadow: 
-        0 6px 12px rgba(0, 0, 0, 0.7),
-        inset 0 2px 2px rgba(255, 255, 255, 0.35);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.25);
     }
-    /* B button: Magenta */
-    .vbtn-b {
-      background: radial-gradient(circle at 35% 30%, #c4307a 0%, #7d1a4c 100%);
-      border: 3px solid #4a102e;
-      color: #ffe0ef;
+    /* X Button: Sprint / Cancel (Magenta theme) */
+    .vbtn-x {
+      background: #2b1226;
+      border: 3px solid #8e2b62;
+      color: #fcaed9;
     }
-    .vbtn-b:active, .vbtn-b.active {
-      background: #d6478e;
+    .vbtn-x:active, .vbtn-x.active {
+      background: #9b296b;
+      color: #ffffff;
       box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9);
       transform: translateY(2px);
     }
-    /* A button: Golden Yellow */
-    .vbtn-a {
-      background: radial-gradient(circle at 35% 30%, #f4c430 0%, #9e7a18 100%);
-      border: 3px solid #574209;
-      color: #3b2c05;
-      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+    /* Z Button: Attack / Action (Golden Yellow theme) */
+    .vbtn-z {
+      background: #2e260e;
+      border: 3px solid #b89218;
+      color: #ffe685;
     }
-    .vbtn-a:active, .vbtn-a.active {
-      background: #ffd95c;
+    .vbtn-z:active, .vbtn-z.active {
+      background: #cba21e;
+      color: #1a1200;
       box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9);
       transform: translateY(2px);
     }
 
     /* Mobile Responsive Optimizations */
     @media (max-width: 768px) {
-      .tv-cabinet {
-        padding: 12px 10px 10px;
-        border-radius: 12px;
-        border-width: 3px;
+      .dark-monitor {
+        padding: 6px 8px 8px;
+        border-width: 2px;
         width: 98vw;
       }
       #game-canvas {
         width: 100%;
         height: auto;
-        max-height: 48vh;
+        max-height: 46vh;
       }
       .footer-hint {
         display: none;
       }
       #virtual-gamepad-root {
-        margin-top: 8px;
+        margin-top: 4px;
       }
       .virtual-gamepad-container {
-        padding: 8px 12px;
+        padding: 6px 8px;
+        gap: 6px;
       }
       .dpad-container {
-        width: 110px;
-        height: 110px;
-        grid-template-columns: 36px 38px 36px;
-        grid-template-rows: 36px 38px 36px;
+        width: 104px;
+        height: 104px;
+        grid-template-columns: 33px 38px 33px;
+        grid-template-rows: 33px 38px 33px;
       }
       .vbtn {
-        width: 48px;
-        height: 48px;
-        font-size: 18px;
+        width: 46px;
+        height: 46px;
       }
       .action-buttons-container {
-        gap: 12px;
+        gap: 10px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="tv-cabinet">
-    <div class="tv-header">
-      <div class="tv-power-led">
-        <div class="led-bulb"></div>
-        <span>POWER</span>
+  <div class="dark-monitor">
+    <div class="monitor-header">
+      <div class="soul-indicator">
+        <span class="soul-heart">♥</span>
+        <span>SOUL</span>
       </div>
-      <div class="tv-badge">MANTLE</div>
-      <div class="tv-power-led">
-        <span>CH 03</span>
-      </div>
+      <div class="game-logo">M A N T L E</div>
+      <div class="chapter-tag">CH 01 : DEMAKE</div>
     </div>
 
     <div class="crt-container">
@@ -360,7 +405,7 @@
 
   <div class="footer-bar">
     <div class="footer-hint">
-      [ARROWS / WASD] Move &nbsp;|&nbsp; [Z / J] Action &nbsp;|&nbsp; [X / K] Run &nbsp;|&nbsp; [C / L] Menu
+      [ARROWS / WASD] Move &nbsp;|&nbsp; [Z] Action/Sword &nbsp;|&nbsp; [X] Run &nbsp;|&nbsp; [C] Menu
     </div>
     <button class="gamepad-toggle-btn" id="toggle-gamepad-btn">🎮 CONTROLS</button>
   </div>

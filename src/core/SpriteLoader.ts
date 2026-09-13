@@ -20,6 +20,7 @@ export interface SpriteDrawOptions {
   frameIndex?: number;
   frameWidth?: number;
   frameHeight?: number;
+  frameY?: number;
   flashWhite?: boolean;
   opacity?: number;
 }
@@ -91,9 +92,56 @@ export class SpriteLoader {
     this.register('kris_defeat', './assets/png/Kris_overworld_8bit_defeat.png', 16, 16, '#241738');
 
     // Susie & Ralsei 8-bit heroes
-    this.register('susie', './assets/png/Susie_HERO_AXE.png', 16, 24, '#9F2B68');
+    this.register('susie', './assets/png/Susie_HERO_AXE.png', 16, 16, '#9F2B68');
     this.register('susie_sheet', './assets/png/Susie_HERO_AXE_sheet.png', 144, 64, '#9F2B68');
-    this.register('ralsei', './assets/png/Ralsei_HERO_SCARF.png', 16, 24, '#2ECC71');
+    this.register('ralsei', './assets/png/Ralsei_HERO_SCARF.png', 16, 16, '#2ECC71');
+
+    // Chapter 3 Official Board Demake Sprites
+    this.register('ch3_susie_down_0', './assets/png/ch3/susie_down_0.png', 16, 16, '#9F2B68');
+    this.register('ch3_susie_down_1', './assets/png/ch3/susie_down_1.png', 16, 16, '#9F2B68');
+    this.register('ch3_susie_left_0', './assets/png/ch3/susie_left_0.png', 16, 16, '#9F2B68');
+    this.register('ch3_susie_left_1', './assets/png/ch3/susie_left_1.png', 16, 16, '#9F2B68');
+    this.register('ch3_susie_right_0', './assets/png/ch3/susie_right_0.png', 16, 16, '#9F2B68');
+    this.register('ch3_susie_right_1', './assets/png/ch3/susie_right_1.png', 16, 16, '#9F2B68');
+    this.register('ch3_susie_up_0', './assets/png/ch3/susie_up_0.png', 16, 16, '#9F2B68');
+    this.register('ch3_susie_up_1', './assets/png/ch3/susie_up_1.png', 16, 16, '#9F2B68');
+    this.register('ch3_susie_hurt', './assets/png/ch3/susie_hurt.png', 16, 16, '#9F2B68');
+    this.register('ch3_susie_dead', './assets/png/ch3/susie_dead.png', 16, 16, '#9F2B68');
+
+    this.register('ch3_kris_down_0', './assets/png/ch3/kris_down_0.png', 16, 16, '#241738');
+    this.register('ch3_kris_left_0', './assets/png/ch3/kris_left_0.png', 16, 16, '#241738');
+    this.register('ch3_kris_left_1', './assets/png/ch3/kris_left_1.png', 16, 16, '#241738');
+    this.register('ch3_kris_up_0', './assets/png/ch3/kris_up_0.png', 16, 16, '#241738');
+    this.register('ch3_kris_up_1', './assets/png/ch3/kris_up_1.png', 16, 16, '#241738');
+    this.register('ch3_kris_strike_left_0', './assets/png/ch3/kris_strike_left_0.png', 32, 16, '#241738');
+    this.register('ch3_kris_strike_left_1', './assets/png/ch3/kris_strike_left_1.png', 32, 16, '#241738');
+    this.register('ch3_kris_strike_left_2', './assets/png/ch3/kris_strike_left_2.png', 32, 16, '#241738');
+    this.register('ch3_kris_strike_right_0', './assets/png/ch3/kris_strike_right_0.png', 32, 16, '#241738');
+    this.register('ch3_kris_strike_right_1', './assets/png/ch3/kris_strike_right_1.png', 32, 16, '#241738');
+    this.register('ch3_kris_strike_right_2', './assets/png/ch3/kris_strike_right_2.png', 32, 16, '#241738');
+    this.register('ch3_kris_strike_up_0', './assets/png/ch3/kris_strike_up_0.png', 16, 32, '#241738');
+    this.register('ch3_kris_hurt', './assets/png/ch3/kris_hurt.png', 16, 16, '#241738');
+    this.register('ch3_kris_dead', './assets/png/ch3/kris_dead.png', 16, 16, '#241738');
+
+    this.register('ch3_ralsei_down_0', './assets/png/ch3/ralsei_down_0.png', 16, 16, '#2ECC71');
+    this.register('ch3_ralsei_down_1', './assets/png/ch3/ralsei_down_1.png', 16, 16, '#2ECC71');
+    this.register('ch3_ralsei_right_0', './assets/png/ch3/ralsei_right_0.png', 16, 16, '#2ECC71');
+    this.register('ch3_ralsei_right_1', './assets/png/ch3/ralsei_right_1.png', 16, 16, '#2ECC71');
+    this.register('ch3_ralsei_up_0', './assets/png/ch3/ralsei_up_0.png', 16, 16, '#2ECC71');
+    this.register('ch3_ralsei_up_1', './assets/png/ch3/ralsei_up_1.png', 16, 16, '#2ECC71');
+    this.register('ch3_ralsei_dead', './assets/png/ch3/ralsei_dead.png', 16, 16, '#2ECC71');
+
+    this.register('ch3_lancer_left', './assets/png/ch3/lancer_left.png', 16, 16, '#2980B9');
+    this.register('ch3_lancer_right', './assets/png/ch3/lancer_right.png', 16, 16, '#2980B9');
+    this.register('ch3_lancer_spin_0', './assets/png/ch3/lancer_spin_0.png', 16, 16, '#2980B9');
+    this.register('ch3_lancer_spin_1', './assets/png/ch3/lancer_spin_1.png', 16, 16, '#2980B9');
+
+    this.register('ch3_rouxls', './assets/png/ch3/rouxls.png', 32, 32, '#1F4E79');
+    this.register('ch3_rudinn', './assets/png/ch3/rudinn.png', 16, 16, '#2ECC71');
+    this.register('ch3_heart', './assets/png/ch3/heart.png', 7, 7, '#E74C3C');
+    this.register('ch3_controller', './assets/png/ch3/controller.png', 16, 16, '#888888');
+    this.register('ch3_healthbar', './assets/png/ch3/healthbar.png', 46, 15, '#FFFFFF');
+    this.register('ch3_game_title', './assets/png/ch3/game_title.png', 150, 40, '#FFFFFF');
 
     // Enemies & Bosses
     this.register('lancer', './assets/png/Lancer_overworld_8bit_spin.png', 20, 20, '#2980B9');
@@ -149,18 +197,19 @@ export class SpriteLoader {
         ctx.filter = 'brightness(200%) contrast(200%)';
       }
 
-      const frameWidth = options.frameWidth ?? img.width;
-      const frameHeight = options.frameHeight ?? img.height;
+      const frameWidth = options.frameWidth ?? (info ? info.width : img.width);
+      const frameHeight = options.frameHeight ?? (info ? info.height : img.height);
       const frameIdx = options.frameIndex ?? 0;
+      const frameY = options.frameY ?? 0;
       const sx = frameIdx * frameWidth;
-      const sy = 0;
+      const sy = frameY * frameHeight;
 
       ctx.drawImage(
         img,
         sx,
         sy,
-        Math.min(frameWidth, img.width),
-        Math.min(frameHeight, img.height),
+        Math.max(1, Math.min(frameWidth, img.width - sx)),
+        Math.max(1, Math.min(frameHeight, img.height - sy)),
         0,
         0,
         width,

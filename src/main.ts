@@ -90,9 +90,35 @@ export class MantleApp {
 }
 
 // Bootstrap when DOM is ready
+function bootstrap(): MantleApp {
+  const app = new MantleApp();
+  app.start();
+
+  if (typeof window !== 'undefined') {
+    (window as unknown as { __mantleApp?: MantleApp }).__mantleApp = app;
+
+    // Unlock Web Audio API on first user gesture (touch, click, key)
+    const unlockAudio = () => {
+      app.synth.resume();
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    };
+    window.addEventListener('pointerdown', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
+    window.addEventListener('touchstart', unlockAudio);
+  }
+
+  return app;
+}
+
 if (typeof window !== 'undefined') {
-  window.addEventListener('DOMContentLoaded', () => {
-    const app = new MantleApp();
-    app.start();
-  });
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', () => {
+      bootstrap();
+    });
+  } else {
+    // DOM is already parsed (Vite module deferred execution)
+    bootstrap();
+  }
 }

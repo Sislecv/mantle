@@ -69,6 +69,17 @@ export class ChiptuneSynth {
     this.muted = muted;
   }
 
+  public resume(): void {
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+  }
+
+  public toggleMute(): boolean {
+    this.muted = !this.muted;
+    return this.muted;
+  }
+
   private ensureContextReady(): boolean {
     if (!this.ctx || this.muted) return false;
     if (this.ctx.state === 'suspended') {

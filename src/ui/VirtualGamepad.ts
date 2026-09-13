@@ -24,21 +24,41 @@ export class VirtualGamepad {
     this.container = document.createElement('div');
     this.container.className = 'virtual-gamepad-container';
     this.container.innerHTML = `
-      <div class="dpad-container">
-        <button class="dpad-btn dpad-up" data-action="up" aria-label="Up">▲</button>
-        <button class="dpad-btn dpad-left" data-action="left" aria-label="Left">◀</button>
-        <div class="dpad-center"></div>
-        <button class="dpad-btn dpad-right" data-action="right" aria-label="Right">▶</button>
-        <button class="dpad-btn dpad-down" data-action="down" aria-label="Down">▼</button>
+      <div class="gamepad-top-toolbar">
+        <button class="top-util-btn" data-cmd="restart" title="Restart chapter">↺ RESTART</button>
+        <button class="top-util-btn" data-cmd="sound" title="Toggle Sound">🔊 SOUND</button>
+        <button class="top-util-btn" data-cmd="fullscreen" title="Toggle Fullscreen">⛶ FULLSCREEN</button>
       </div>
 
-      <div class="middle-buttons-container">
-        <button class="vbtn-menu" data-action="menu" aria-label="Menu">MENU</button>
-      </div>
+      <div class="gamepad-main-row">
+        <!-- Left 8-Bit D-PAD -->
+        <div class="dpad-container">
+          <button class="dpad-btn dpad-up" data-action="up" aria-label="Up">▲</button>
+          <button class="dpad-btn dpad-left" data-action="left" aria-label="Left">◀</button>
+          <div class="dpad-center"></div>
+          <button class="dpad-btn dpad-right" data-action="right" aria-label="Right">▶</button>
+          <button class="dpad-btn dpad-down" data-action="down" aria-label="Down">▼</button>
+        </div>
 
-      <div class="action-buttons-container">
-        <button class="vbtn vbtn-b" data-action="cancel" aria-label="B / Cancel">B</button>
-        <button class="vbtn vbtn-a" data-action="action" aria-label="A / Attack">A</button>
+        <!-- Center Menu Button -->
+        <div class="middle-buttons-container">
+          <button class="vbtn-menu vbtn-c" data-action="menu" aria-label="Menu (C)">
+            <span class="vbtn-main-label">C</span>
+            <span class="vbtn-sub-label">MENU</span>
+          </button>
+        </div>
+
+        <!-- Right Deltarune Action Cluster (Z: Action/Attack, X: Run/Cancel) -->
+        <div class="action-buttons-container">
+          <button class="vbtn vbtn-b vbtn-x" data-action="cancel" aria-label="X / Run / Cancel">
+            <span class="vbtn-main-label">X</span>
+            <span class="vbtn-sub-label">RUN</span>
+          </button>
+          <button class="vbtn vbtn-a vbtn-z" data-action="action" aria-label="Z / Attack / Confirm">
+            <span class="vbtn-main-label">Z</span>
+            <span class="vbtn-sub-label">ACT</span>
+          </button>
+        </div>
       </div>
     `;
 
@@ -104,6 +124,30 @@ export class VirtualGamepad {
         btn.addEventListener(evtName, handler as EventListener, { passive: false });
         this.boundElements.push({ el: btn, event: evtName, fn: handler as EventListener });
       }
+    });
+
+    // Command buttons (restart, sound, fullscreen)
+    const cmdButtons = this.container.querySelectorAll<HTMLElement>('[data-cmd]');
+    cmdButtons.forEach((btn) => {
+      const cmd = btn.getAttribute('data-cmd');
+      const clickHandler = (e: Event) => {
+        e.preventDefault();
+        const app = (window as unknown as { __mantleApp?: { story: { restart: () => void }; synth: { toggleMute: () => boolean } } }).__mantleApp;
+        if (cmd === 'restart' && app) {
+          app.story.restart();
+        } else if (cmd === 'sound' && app) {
+          const isMuted = app.synth.toggleMute();
+          btn.textContent = isMuted ? '🔇 MUTED' : '🔊 SOUND';
+        } else if (cmd === 'fullscreen') {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen?.().catch(() => {});
+          } else {
+            document.exitFullscreen?.().catch(() => {});
+          }
+        }
+      };
+      btn.addEventListener('click', clickHandler);
+      this.boundElements.push({ el: btn, event: 'click', fn: clickHandler });
     });
   }
 }

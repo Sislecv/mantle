@@ -248,84 +248,87 @@ export class Follower extends Entity {
    * Susie (HERO_AXE): Dark violet armor, magenta skin, golden axe.
    */
   private renderSusie(renderer: Renderer, x: number, y: number): void {
+    const frame = this.isMoving ? (this.walkFrame % 2) : 0;
+    let spriteKey = `ch3_susie_down_${frame}`;
+    let flipX = false;
+
+    switch (this.facing) {
+      case 'UP':
+        spriteKey = `ch3_susie_up_${frame}`;
+        break;
+      case 'LEFT':
+        spriteKey = `ch3_susie_left_${frame}`;
+        break;
+      case 'RIGHT':
+        spriteKey = `ch3_susie_right_${frame}`;
+        break;
+      case 'DOWN':
+      default:
+        spriteKey = `ch3_susie_down_${frame}`;
+        break;
+    }
+
+    // 1. Prioritize Chapter 3 official 8-bit directional frame
+    if (SpriteLoader.has(spriteKey) && SpriteLoader.getSpriteInfo(spriteKey)?.loaded) {
+      SpriteLoader.draw(renderer.ctx, spriteKey, x, y, 16, 16, { flipX });
+      return;
+    }
+
+    // 2. Fallback to loaded Susie sprite
+    if (SpriteLoader.has('susie') && SpriteLoader.getSpriteInfo('susie')?.loaded) {
+      SpriteLoader.draw(renderer.ctx, 'susie', x, y, 16, 16, {
+        flipX: this.facing === 'LEFT',
+      });
+      return;
+    }
+
     const darkArmor = NES_COLORS.SUSIE_PURPLE;
     const skin = NES_COLORS.SUSIE_MAGENTA;
     const goldAxe = NES_COLORS.GOLD_ACCENT;
     const hair = '#200C2A';
     const darkPants = '#140D1C';
     const bladeColor = '#E6E6E6';
-
     const bob = this.isMoving && (this.walkFrame === 1 || this.walkFrame === 3) ? 1 : 0;
-
-    // If authentic 8-bit Susie sprite is loaded, render it directly!
-    if (SpriteLoader.has('susie') && SpriteLoader.getSpriteInfo('susie')?.loaded) {
-      SpriteLoader.draw(renderer.ctx, 'susie', x, y - 4, 16, 24, {
-        flipX: this.facing === 'LEFT',
-      });
-      return;
-    }
 
     switch (this.facing) {
       case 'UP':
-        // Wild mane / hair back
         renderer.drawRect(x + 3, y + bob, 10, 7, hair);
         renderer.drawRect(x + 2, y + 2 + bob, 12, 5, hair);
-        // Jacket
         renderer.drawRect(x + 4, y + 7 + bob, 8, 5, darkArmor);
-        // Pants / Boots
         renderer.drawRect(x + 4, y + 12 + bob, 3, 4, darkPants);
         renderer.drawRect(x + 9, y + 12 + bob, 3, 4, darkPants);
-        // Golden axe slung on back
         renderer.drawRect(x + 7, y - 2 + bob, 2, 10, goldAxe);
         renderer.drawRect(x + 9, y - 2 + bob, 4, 3, bladeColor);
         break;
-
       case 'LEFT':
-        // Snout & Face
         renderer.drawRect(x + 1, y + 4 + bob, 5, 3, skin);
-        // Wild mane
         renderer.drawRect(x + 4, y + 1 + bob, 9, 6, hair);
         renderer.drawRect(x + 9, y + 3 + bob, 4, 5, hair);
-        // Jacket
         renderer.drawRect(x + 4, y + 7 + bob, 8, 5, darkArmor);
-        // Legs
         renderer.drawRect(x + 5, y + 12 + bob, 3, 4, darkPants);
         renderer.drawRect(x + 8, y + 12 + bob, 3, 4, darkPants);
-        // Axe at side
         renderer.drawRect(x + 1, y + 6 + bob, 2, 8, goldAxe);
         renderer.drawRect(x - 1, y + 5 + bob, 3, 3, bladeColor);
         break;
-
       case 'RIGHT':
-        // Snout & Face
         renderer.drawRect(x + 10, y + 4 + bob, 5, 3, skin);
-        // Wild mane
         renderer.drawRect(x + 3, y + 1 + bob, 9, 6, hair);
         renderer.drawRect(x + 3, y + 3 + bob, 4, 5, hair);
-        // Jacket
         renderer.drawRect(x + 4, y + 7 + bob, 8, 5, darkArmor);
-        // Legs
         renderer.drawRect(x + 5, y + 12 + bob, 3, 4, darkPants);
         renderer.drawRect(x + 8, y + 12 + bob, 3, 4, darkPants);
-        // Axe at side
         renderer.drawRect(x + 13, y + 6 + bob, 2, 8, goldAxe);
         renderer.drawRect(x + 14, y + 5 + bob, 3, 3, bladeColor);
         break;
-
       case 'DOWN':
       default:
-        // Wild hair covering eyes
         renderer.drawRect(x + 3, y + 1 + bob, 10, 6, hair);
         renderer.drawRect(x + 2, y + 3 + bob, 12, 4, hair);
-        // Magenta snout / grin
         renderer.drawRect(x + 5, y + 5 + bob, 6, 2, skin);
-        // Dark Violet Armor / Jacket with studs
         renderer.drawRect(x + 4, y + 7 + bob, 8, 5, darkArmor);
         renderer.drawRect(x + 6, y + 8 + bob, 4, 1, '#4A1C5A');
-        // Dark Legs & Boots
         renderer.drawRect(x + 4, y + 12 + bob, 3, 4, darkPants);
         renderer.drawRect(x + 9, y + 12 + bob, 3, 4, darkPants);
-        // Golden axe head on shoulder
         renderer.drawRect(x + 12, y + 5 + bob, 2, 8, goldAxe);
         renderer.drawRect(x + 13, y + 4 + bob, 3, 3, bladeColor);
         break;
@@ -336,13 +339,29 @@ export class Follower extends Entity {
    * Ralsei (HERO_SCARF): Forest green robe, long pink scarf trailing.
    */
   private renderRalsei(renderer: Renderer, x: number, y: number): void {
-    const bob = this.isMoving && (this.walkFrame === 1 || this.walkFrame === 3) ? 1 : 0;
+    const frame = this.isMoving ? (this.walkFrame % 2) : 0;
+    let spriteKey = `ch3_ralsei_down_${frame}`;
+    let flipX = false;
 
-    // If authentic 8-bit Ralsei sprite is loaded, render it directly!
-    if (SpriteLoader.has('ralsei') && SpriteLoader.getSpriteInfo('ralsei')?.loaded) {
-      SpriteLoader.draw(renderer.ctx, 'ralsei', x, y - 4, 16, 24, {
-        flipX: this.facing === 'LEFT',
-      });
+    switch (this.facing) {
+      case 'UP':
+        spriteKey = `ch3_ralsei_up_${frame}`;
+        break;
+      case 'LEFT':
+        spriteKey = `ch3_ralsei_right_${frame}`;
+        flipX = true;
+        break;
+      case 'RIGHT':
+        spriteKey = `ch3_ralsei_right_${frame}`;
+        break;
+      case 'DOWN':
+      default:
+        spriteKey = `ch3_ralsei_down_${frame}`;
+        break;
+    }
+
+    if (SpriteLoader.has(spriteKey) && SpriteLoader.getSpriteInfo(spriteKey)?.loaded) {
+      SpriteLoader.draw(renderer.ctx, spriteKey, x, y, 16, 16, { flipX });
       return;
     }
 
@@ -352,6 +371,7 @@ export class Follower extends Entity {
     const shadowFace = '#1A1822';
     const glasses = '#82E0AA';
     const pinkHorns = '#FF8DA1';
+    const bob = this.isMoving && (this.walkFrame === 1 || this.walkFrame === 3) ? 1 : 0;
 
     switch (this.facing) {
       case 'UP':

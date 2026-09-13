@@ -21,6 +21,8 @@ import {
 import { SuitPlatePuzzle } from '../puzzles/SuitPlatePuzzle';
 import { BoxPushPuzzle, RouxlsKaardPuzzle } from '../puzzles/BoxPushPuzzle';
 import { NES_COLORS, TILE_SIZE, CANVAS_WIDTH, CANVAS_HEIGHT } from '../core/Constants';
+import { Hud } from '../ui/Hud';
+import { SpriteLoader } from '../core/SpriteLoader';
 
 export type StoryMode = 'OVERWORLD' | 'BATTLE' | 'DIALOGUE' | 'EPILOGUE';
 
@@ -56,6 +58,7 @@ export class Chapter1Story {
   public ralseiFollower: Follower;
   public battleEngine: BattleEngine;
   public dialogueBox: DialogueBox;
+  public hud: Hud;
   public synth: ChiptuneSynth;
   public input: InputManager | null;
 
@@ -104,6 +107,9 @@ export class Chapter1Story {
 
     this.dialogueBox = new DialogueBox(this.synth);
     this.battleEngine = new BattleEngine(this.synth);
+    this.hud = new Hud();
+
+    SpriteLoader.initCoreSprites();
 
     this.suitPuzzle = new SuitPlatePuzzle({
       id: 'field_suit_puzzle',
@@ -530,11 +536,15 @@ export class Chapter1Story {
     if (currentZone.id === ZONE_IDS.CLIFFS) {
       if (!this.isSusieInParty) {
         // Susie NPC waiting at slope base (9, 7)
-        renderer.drawRect(9 * TILE_SIZE, 7 * TILE_SIZE, TILE_SIZE, TILE_SIZE, NES_COLORS.SUSIE_MAGENTA);
-        renderer.drawText('S', 9 * TILE_SIZE + 4, 7 * TILE_SIZE + 4, {
-          color: NES_COLORS.WHITE,
-          size: 8,
-        });
+        if (SpriteLoader.has('susie') && SpriteLoader.getSpriteInfo('susie')?.loaded) {
+          SpriteLoader.draw(renderer.ctx, 'susie', 9 * TILE_SIZE, 7 * TILE_SIZE - 4, 16, 24);
+        } else {
+          renderer.drawRect(9 * TILE_SIZE, 7 * TILE_SIZE, TILE_SIZE, TILE_SIZE, NES_COLORS.SUSIE_MAGENTA);
+          renderer.drawText('S', 9 * TILE_SIZE + 4, 7 * TILE_SIZE + 4, {
+            color: NES_COLORS.WHITE,
+            size: 8,
+          });
+        }
       }
     } else if (currentZone.id === ZONE_IDS.CASTLE_TOWN) {
       if (!this.player.hasSword) {
@@ -544,11 +554,15 @@ export class Chapter1Story {
       }
       if (!this.isRalseiInParty) {
         // Ralsei NPC waiting at (10, 7)
-        renderer.drawRect(10 * TILE_SIZE, 7 * TILE_SIZE, TILE_SIZE, TILE_SIZE, NES_COLORS.RALSEI_PINK);
-        renderer.drawText('R', 10 * TILE_SIZE + 4, 7 * TILE_SIZE + 4, {
-          color: NES_COLORS.WHITE,
-          size: 8,
-        });
+        if (SpriteLoader.has('ralsei') && SpriteLoader.getSpriteInfo('ralsei')?.loaded) {
+          SpriteLoader.draw(renderer.ctx, 'ralsei', 10 * TILE_SIZE, 7 * TILE_SIZE - 4, 16, 24);
+        } else {
+          renderer.drawRect(10 * TILE_SIZE, 7 * TILE_SIZE, TILE_SIZE, TILE_SIZE, NES_COLORS.RALSEI_PINK);
+          renderer.drawText('R', 10 * TILE_SIZE + 4, 7 * TILE_SIZE + 4, {
+            color: NES_COLORS.WHITE,
+            size: 8,
+          });
+        }
       }
       if (!this.greatDoorOpened) {
         // The Great Door blocking east exit (15, 7)
@@ -587,22 +601,19 @@ export class Chapter1Story {
       this.dialogueBox.render(renderer);
     }
 
-    // Overworld HUD Header
+    // Overworld Authentic Chapter 3 Mantle Top HUD
     this.renderHUD(renderer, currentZone.name);
   }
 
   private renderHUD(renderer: Renderer, zoneName: string): void {
-    // Top HUD bar
-    renderer.drawRect(0, 0, CANVAS_WIDTH, 12, 'rgba(0, 0, 0, 0.6)');
-    renderer.drawText(zoneName, 4, 2, {
-      color: NES_COLORS.GOLD_ACCENT,
-      size: 8,
-    });
-
-    const krisHp = `KRIS HP ${this.player.hp}/${this.player.maxHp}`;
-    renderer.drawText(krisHp, CANVAS_WIDTH - 85, 2, {
-      color: NES_COLORS.KRIS_CYAN,
-      size: 8,
+    this.hud.render(renderer, {
+      hp: this.player.hp,
+      maxHp: this.player.maxHp,
+      hasSword: this.player.hasSword,
+      swordCharges: 4,
+      maxSwordCharges: 4,
+      lv: this.player.lv,
+      roomName: zoneName,
     });
   }
 }

@@ -11,6 +11,7 @@ import { InputManager } from './core/InputManager';
 import { ChiptuneSynth } from './audio/ChiptuneSynth';
 import { GameLoop } from './core/GameLoop';
 import { Chapter1Story } from './scenes/Chapter1Story';
+import { SpriteLoader } from './core/SpriteLoader';
 
 export class MantleApp {
   public renderer: Renderer;
@@ -20,6 +21,7 @@ export class MantleApp {
   public story: Chapter1Story;
 
   constructor() {
+    SpriteLoader.initCoreSprites();
     this.renderer = new Renderer('#game-canvas');
     this.input = new InputManager();
     this.synth = new ChiptuneSynth();

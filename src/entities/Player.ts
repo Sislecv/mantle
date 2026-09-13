@@ -11,6 +11,7 @@ import { DestructibleObstacle, HitResult } from '../map/DestructibleObstacle';
 import { InputManager } from '../core/InputManager';
 import { Renderer } from '../core/Renderer';
 import { NES_COLORS, TILE_SIZE } from '../core/Constants';
+import { SpriteLoader } from '../core/SpriteLoader';
 
 export type PlayerState = 'UNARMED' | 'SWORD_PULL' | 'ARMED' | 'ATTACKING' | 'HURT' | 'DEFEAT';
 
@@ -527,52 +528,58 @@ export class Player extends Entity {
   }
 
   /**
-   * Default Kris standing / walking pose.
+   * Default Kris standing / walking pose using authentic 8-bit sprite.
    */
   private renderDefault(renderer: Renderer, x: number, y: number): void {
-    // Hair (dark indigo / purple)
-    renderer.drawRect(x + 4, y, 8, 4, '#241738');
-    renderer.drawRect(x + 3, y + 2, 10, 3, '#241738');
+    const isMoving = this.vx !== 0 || this.vy !== 0;
+    const isLeft = this.facing === 'LEFT';
 
-    // Face / Skin
-    renderer.drawRect(x + 5, y + 4, 6, 3, '#82E0AA'); // Dark world pale teal skin
-
-    // Pink Scarf
-    renderer.drawRect(x + 4, y + 7, 8, 2, NES_COLORS.KRIS_CAPE);
-    if (this.facing === 'RIGHT') {
-      renderer.drawRect(x + 2, y + 8, 3, 2, NES_COLORS.KRIS_CAPE);
-    } else if (this.facing === 'LEFT') {
-      renderer.drawRect(x + 11, y + 8, 3, 2, NES_COLORS.KRIS_CAPE);
+    if (SpriteLoader.has('kris_walk') && SpriteLoader.getSpriteInfo('kris_walk')?.loaded) {
+      SpriteLoader.draw(renderer.ctx, 'kris_walk', x, y, this.width, this.height, {
+        flipX: isLeft,
+      });
+      // Footstep bobbing
+      if (isMoving) {
+        const step = Math.floor(Date.now() / 150) % 2;
+        if (step === 1) {
+          renderer.drawRect(x + (isLeft ? 3 : 9), y + 14, 2, 2, '#101828');
+        }
+      }
+    } else {
+      // Fallback pixel rendering
+      renderer.drawRect(x + 4, y, 8, 4, '#241738');
+      renderer.drawRect(x + 3, y + 2, 10, 3, '#241738');
+      renderer.drawRect(x + 5, y + 4, 6, 3, '#82E0AA');
+      renderer.drawRect(x + 4, y + 7, 8, 2, NES_COLORS.KRIS_CAPE);
+      renderer.drawRect(x + 4, y + 9, 8, 4, NES_COLORS.KRIS_CYAN);
+      renderer.drawRect(x + 4, y + 13, 3, 3, '#192841');
+      renderer.drawRect(x + 9, y + 13, 3, 3, '#192841');
     }
 
-    // Cyan Armor Torso
-    renderer.drawRect(x + 4, y + 9, 8, 4, NES_COLORS.KRIS_CYAN);
-    renderer.drawRect(x + 5, y + 10, 6, 2, NES_COLORS.KRIS_BLUE);
-
-    // Dark Legs / Boots
-    renderer.drawRect(x + 4, y + 13, 3, 3, '#192841');
-    renderer.drawRect(x + 9, y + 13, 3, 3, '#192841');
-
     // Sword at hip if ARMED
-    if (this.hasSword) {
+    if (this.hasSword && (!SpriteLoader.has('kris_walk') || !SpriteLoader.getSpriteInfo('kris_walk')?.loaded)) {
       if (this.facing === 'LEFT') {
         renderer.drawRect(x + 12, y + 8, 2, 6, '#FFFFFF');
-        renderer.drawRect(x + 11, y + 10, 4, 1, '#C0C0C0');
       } else {
         renderer.drawRect(x + 2, y + 8, 2, 6, '#FFFFFF');
-        renderer.drawRect(x + 1, y + 10, 4, 1, '#C0C0C0');
       }
     }
   }
 
   /**
-   * 5-Frame sword slash animation.
+   * 5-Frame sword slash animation with authentic 8-bit sprite.
    */
   private renderAttack(renderer: Renderer, x: number, y: number): void {
-    this.renderDefault(renderer, x, y);
+    const isLeft = this.facing === 'LEFT';
+    if (SpriteLoader.has('kris_attack') && SpriteLoader.getSpriteInfo('kris_attack')?.loaded) {
+      SpriteLoader.draw(renderer.ctx, 'kris_attack', x, y, this.width, this.height, {
+        flipX: isLeft,
+      });
+    } else {
+      this.renderDefault(renderer, x, y);
+    }
 
     const f = this.attackFrame;
-    // Blade & slash arc
     const bladeColor = '#FFFFFF';
     const arcColor = NES_COLORS.KRIS_CYAN;
 
@@ -640,20 +647,21 @@ export class Player extends Entity {
   }
 
   /**
-   * Sword pull triumph pose.
+   * Sword pull triumph pose using official 8-bit pose sprite.
    */
   private renderSwordPull(renderer: Renderer, x: number, y: number): void {
-    // Kris facing front with arms raised
-    renderer.drawRect(x + 4, y + 4, 8, 4, '#241738');
-    renderer.drawRect(x + 5, y + 6, 6, 3, '#82E0AA');
-    renderer.drawRect(x + 4, y + 9, 8, 2, NES_COLORS.KRIS_CAPE);
-    renderer.drawRect(x + 4, y + 11, 8, 4, NES_COLORS.KRIS_CYAN);
-    renderer.drawRect(x + 4, y + 15, 3, 2, '#192841');
-    renderer.drawRect(x + 9, y + 15, 3, 2, '#192841');
-
-    // Glowing sword held aloft above Kris's head
-    renderer.drawRect(x + 7, y - 10, 2, 14, '#FFFFFF');
-    renderer.drawRect(x + 5, y + 2, 6, 2, '#C0C0C0');
+    if (SpriteLoader.has('kris_pose') && SpriteLoader.getSpriteInfo('kris_pose')?.loaded) {
+      SpriteLoader.draw(renderer.ctx, 'kris_pose', x, y - 2, 17, 16);
+    } else {
+      renderer.drawRect(x + 4, y + 4, 8, 4, '#241738');
+      renderer.drawRect(x + 5, y + 6, 6, 3, '#82E0AA');
+      renderer.drawRect(x + 4, y + 9, 8, 2, NES_COLORS.KRIS_CAPE);
+      renderer.drawRect(x + 4, y + 11, 8, 4, NES_COLORS.KRIS_CYAN);
+      renderer.drawRect(x + 4, y + 15, 3, 2, '#192841');
+      renderer.drawRect(x + 9, y + 15, 3, 2, '#192841');
+      renderer.drawRect(x + 7, y - 10, 2, 14, '#FFFFFF');
+      renderer.drawRect(x + 5, y + 2, 6, 2, '#C0C0C0');
+    }
 
     // Shining sparkle at blade tip
     const sparklePulse = Math.floor(this.pullTimer * 10) % 2 === 0;
@@ -664,21 +672,29 @@ export class Player extends Entity {
   }
 
   /**
-   * Recoil / hurt pose with flash.
+   * Recoil / hurt pose with authentic 8-bit hurt sprite.
    */
   private renderHurt(renderer: Renderer, x: number, y: number): void {
-    // Flashing white / hurt silhouette
-    renderer.drawRect(x + 3, y + 2, 10, 14, '#FFFFFF');
-    renderer.drawRect(x + 5, y + 4, 6, 4, NES_COLORS.SOUL_RED);
+    if (SpriteLoader.has('kris_hurt') && SpriteLoader.getSpriteInfo('kris_hurt')?.loaded) {
+      SpriteLoader.draw(renderer.ctx, 'kris_hurt', x, y, this.width, this.height, {
+        flashWhite: true,
+      });
+    } else {
+      renderer.drawRect(x + 3, y + 2, 10, 14, '#FFFFFF');
+      renderer.drawRect(x + 5, y + 4, 6, 4, NES_COLORS.SOUL_RED);
+    }
   }
 
   /**
-   * Defeat / fallen pose.
+   * Defeat / fallen pose with authentic 8-bit defeat sprite.
    */
   private renderDefeat(renderer: Renderer, x: number, y: number): void {
-    // Kris collapsed horizontally on ground
-    renderer.drawRect(x + 1, y + 10, 14, 5, '#1B1428');
-    renderer.drawRect(x + 3, y + 9, 8, 3, NES_COLORS.KRIS_CYAN);
-    renderer.drawRect(x + 11, y + 10, 4, 4, NES_COLORS.KRIS_CAPE);
+    if (SpriteLoader.has('kris_defeat') && SpriteLoader.getSpriteInfo('kris_defeat')?.loaded) {
+      SpriteLoader.draw(renderer.ctx, 'kris_defeat', x, y, this.width, this.height);
+    } else {
+      renderer.drawRect(x + 1, y + 10, 14, 5, '#1B1428');
+      renderer.drawRect(x + 3, y + 9, 8, 3, NES_COLORS.KRIS_CYAN);
+      renderer.drawRect(x + 11, y + 10, 4, 4, NES_COLORS.KRIS_CAPE);
+    }
   }
 }

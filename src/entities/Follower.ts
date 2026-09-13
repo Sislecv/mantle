@@ -8,6 +8,7 @@ import { Entity, EntityOptions, FacingDirection } from './Entity';
 import { Tilemap } from '../map/Tilemap';
 import { Renderer } from '../core/Renderer';
 import { NES_COLORS } from '../core/Constants';
+import { SpriteLoader } from '../core/SpriteLoader';
 
 export type FollowerName = 'SUSIE' | 'RALSEI';
 
@@ -256,6 +257,14 @@ export class Follower extends Entity {
 
     const bob = this.isMoving && (this.walkFrame === 1 || this.walkFrame === 3) ? 1 : 0;
 
+    // If authentic 8-bit Susie sprite is loaded, render it directly!
+    if (SpriteLoader.has('susie') && SpriteLoader.getSpriteInfo('susie')?.loaded) {
+      SpriteLoader.draw(renderer.ctx, 'susie', x, y - 4, 16, 24, {
+        flipX: this.facing === 'LEFT',
+      });
+      return;
+    }
+
     switch (this.facing) {
       case 'UP':
         // Wild mane / hair back
@@ -327,14 +336,22 @@ export class Follower extends Entity {
    * Ralsei (HERO_SCARF): Forest green robe, long pink scarf trailing.
    */
   private renderRalsei(renderer: Renderer, x: number, y: number): void {
+    const bob = this.isMoving && (this.walkFrame === 1 || this.walkFrame === 3) ? 1 : 0;
+
+    // If authentic 8-bit Ralsei sprite is loaded, render it directly!
+    if (SpriteLoader.has('ralsei') && SpriteLoader.getSpriteInfo('ralsei')?.loaded) {
+      SpriteLoader.draw(renderer.ctx, 'ralsei', x, y - 4, 16, 24, {
+        flipX: this.facing === 'LEFT',
+      });
+      return;
+    }
+
     const robe = NES_COLORS.RALSEI_GREEN;
     const scarf = NES_COLORS.RALSEI_PINK;
     const hat = '#14291D';
     const shadowFace = '#1A1822';
     const glasses = '#82E0AA';
     const pinkHorns = '#FF8DA1';
-
-    const bob = this.isMoving && (this.walkFrame === 1 || this.walkFrame === 3) ? 1 : 0;
 
     switch (this.facing) {
       case 'UP':

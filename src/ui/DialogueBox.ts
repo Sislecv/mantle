@@ -7,6 +7,7 @@
 import { NES_COLORS } from '../core/Constants';
 import { Renderer } from '../core/Renderer';
 import { ChiptuneSynth } from '../audio/ChiptuneSynth';
+import { SpriteLoader } from '../core/SpriteLoader';
 import { Typewriter, FormattedChar } from './Typewriter';
 
 export interface DialogueLine {
@@ -177,12 +178,17 @@ export class DialogueBox {
       renderer.drawRect(portraitBoxX, portraitBoxY, portraitSize, portraitSize, NES_COLORS.DARK_BG, true);
       renderer.drawRect(portraitBoxX, portraitBoxY, portraitSize, portraitSize, NES_COLORS.WHITE, false);
 
-      // Portrait label / monogram
-      const pName = this.currentLine.portrait.toUpperCase();
-      renderer.drawText(pName.slice(0, 4), portraitBoxX + 4, portraitBoxY + 14, {
-        color: NES_COLORS.SOUL_GLOW,
-        size: 8,
-      });
+      const pKey = `portrait_${this.currentLine.portrait.toLowerCase()}`;
+      if (SpriteLoader.has(pKey) && SpriteLoader.getSpriteInfo(pKey)?.loaded) {
+        SpriteLoader.draw(renderer.ctx, pKey, portraitBoxX + 2, portraitBoxY + 2, 32, 32);
+      } else {
+        // Fallback portrait monogram
+        const pName = this.currentLine.portrait.toUpperCase();
+        renderer.drawText(pName.slice(0, 4), portraitBoxX + 4, portraitBoxY + 14, {
+          color: NES_COLORS.SOUL_GLOW,
+          size: 8,
+        });
+      }
 
       textStartX = this.x + 48;
     }
@@ -243,6 +249,15 @@ export class DialogueBox {
 
         renderer.drawText(`${prefix}${choice}`, choiceX, choiceY, { color, size: 8 });
         choiceX += (choice.length + 3) * charWidth + 12;
+      });
+    } else if (this.typewriter.isFinished) {
+      // 6. Chapter 3 Sword Route authentic bouncing prompt cursor (▼)
+      const bounce = Math.floor(Date.now() / 250) % 2 === 0 ? 0 : 2;
+      const arrowX = this.x + this.width - 12;
+      const arrowY = this.y + this.height - 11 + bounce;
+      renderer.drawText('▼', arrowX, arrowY, {
+        color: NES_COLORS.WHITE,
+        size: 8,
       });
     }
   }

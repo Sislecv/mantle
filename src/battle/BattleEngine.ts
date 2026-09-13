@@ -6,11 +6,12 @@
 import { Renderer } from '../core/Renderer';
 import { InputManager } from '../core/InputManager';
 import { ChiptuneSynth } from '../audio/ChiptuneSynth';
-import { NES_COLORS, CANVAS_WIDTH, CANVAS_HEIGHT } from '../core/Constants';
-import { BattleBox } from './BattleBox';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, NES_COLORS } from '../core/Constants';
 import { Soul } from './Soul';
+import { BattleBox } from './BattleBox';
 import { Bullet } from './Bullet';
-import { BossConfig } from './BossPatterns';
+import { BossConfig, BossAct } from './BossPatterns';
+import { SpriteLoader } from '../core/SpriteLoader';
 export type { BossConfig, BossAct } from './BossPatterns';
 
 export type BattleState =
@@ -471,11 +472,48 @@ export class BattleEngine {
     renderer.drawRect(mercyBarX, hpBarY, 50, hpBarH, NES_COLORS.GRAY_DARK, true);
     renderer.drawRect(mercyBarX, hpBarY, Math.floor(50 * mercyRatio), hpBarH, NES_COLORS.GOLD_ACCENT, true);
 
-    // Stylized Boss Figure Primitives
+    // Render Authentic 8-bit Boss Figure
     const bossCenterX = CANVAS_WIDTH / 2;
     const bossCenterY = 65;
-    renderer.drawRect(bossCenterX - 16, bossCenterY - 16, 32, 32, NES_COLORS.DARK_ACCENT, true);
-    renderer.drawRect(bossCenterX - 12, bossCenterY - 12, 24, 24, NES_COLORS.WHITE, false);
+    const bName = this.currentBoss.name.toLowerCase();
+
+    let bossKey = 'lancer';
+    let bossW = 32;
+    let bossH = 32;
+
+    if (bName.includes('king')) {
+      bossKey = 'king';
+      bossW = 48;
+      bossH = 48;
+    } else if (bName.includes('round')) {
+      bossKey = 'k_round';
+      bossW = 36;
+      bossH = 48;
+    } else if (bName.includes('rudinn')) {
+      bossKey = 'rudinn';
+      bossW = 32;
+      bossH = 32;
+    } else if (bName.includes('hathy')) {
+      bossKey = 'hathy';
+      bossW = 32;
+      bossH = 32;
+    } else if (bName.includes('eram') || bName.includes('mantle')) {
+      bossKey = 'eram';
+      bossW = 40;
+      bossH = 40;
+    }
+
+    // Subtle breathing float animation
+    const bobY = Math.sin(Date.now() / 250) * 2;
+    const bx = Math.floor(bossCenterX - bossW / 2);
+    const by = Math.floor(bossCenterY - bossH / 2 + bobY);
+
+    if (SpriteLoader.has(bossKey) && SpriteLoader.getSpriteInfo(bossKey)?.loaded) {
+      SpriteLoader.draw(renderer.ctx, bossKey, bx, by, bossW, bossH);
+    } else {
+      renderer.drawRect(bossCenterX - 16, bossCenterY - 16 + bobY, 32, 32, NES_COLORS.DARK_ACCENT, true);
+      renderer.drawRect(bossCenterX - 12, bossCenterY - 12 + bobY, 24, 24, NES_COLORS.WHITE, false);
+    }
   }
 
   private renderMenu(renderer: Renderer): void {
@@ -510,7 +548,7 @@ export class BattleEngine {
   private renderSubmenu(renderer: Renderer): void {
     const isActMenu = this.selectedMenuAction === 'ACT';
     const options = isActMenu
-      ? (this.currentBoss?.acts ?? []).map((a) => a.name)
+      ? (this.currentBoss?.acts ?? []).map((a: BossAct) => a.name)
       : this.items.map((it) => it.name);
 
     for (let i = 0; i < options.length; i++) {

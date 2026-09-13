@@ -2,16 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Mantle - Deltarune Chapter 1 (8-Bit Demake)</title>
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      touch-action: manipulation;
     }
     body {
-      background-color: #0c0b10;
+      background-color: #08060c;
+      background-image: 
+        radial-gradient(circle at 50% 35%, rgba(65, 45, 95, 0.35) 0%, rgba(10, 8, 16, 0.95) 75%),
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0px, rgba(0, 0, 0, 0.2) 2px, transparent 2px, transparent 4px);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -19,58 +23,350 @@
       min-height: 100vh;
       font-family: monospace;
       color: #fff;
-      overflow: hidden;
+      overflow-x: hidden;
       user-select: none;
+      -webkit-user-select: none;
     }
+
+    /* Wooden CRT TV Console Bezel */
+    .tv-cabinet {
+      position: relative;
+      padding: 24px 28px 20px;
+      background: linear-gradient(145deg, #3d2218 0%, #20110b 50%, #170c07 100%);
+      border: 5px solid #140b07;
+      border-radius: 18px;
+      box-shadow: 
+        0 15px 40px rgba(0, 0, 0, 0.95),
+        inset 0 2px 4px rgba(255, 200, 150, 0.25),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* TV Cabinet Header / Badge */
+    .tv-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 0 4px;
+    }
+    .tv-badge {
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 3px;
+      color: #dfba73;
+      text-shadow: 1px 1px 2px #000;
+      background: linear-gradient(180deg, #382414 0%, #1e1208 100%);
+      padding: 2px 14px;
+      border-radius: 4px;
+      border: 1px solid #735028;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    .tv-power-led {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      color: #9d8876;
+    }
+    .led-bulb {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #ff3344;
+      box-shadow: 0 0 6px #ff2233;
+    }
+
+    /* CRT Display Screen Container */
     .crt-container {
       position: relative;
-      padding: 16px;
-      background: radial-gradient(circle at center, #1b1b26 0%, #08080c 100%);
-      border: 4px solid #3a324a;
-      border-radius: 12px;
-      box-shadow: 0 0 30px rgba(0, 0, 0, 0.9), inset 0 0 15px rgba(0, 0, 0, 0.8);
+      padding: 10px;
+      background: #000;
+      border: 6px solid #1c1524;
+      border-radius: 10px;
+      box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.95);
     }
     .crt-container::after {
       content: " ";
       display: block;
       position: absolute;
-      top: 16px;
-      left: 16px;
-      right: 16px;
-      bottom: 16px;
-      background: linear-gradient(rgba(18, 16, 26, 0) 50%, rgba(0, 0, 0, 0.22) 50%),
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      background: linear-gradient(rgba(18, 16, 26, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
                   linear-gradient(90deg, rgba(255, 0, 80, 0.02), rgba(0, 255, 100, 0.01), rgba(80, 80, 255, 0.02));
       background-size: 100% 3px, 6px 100%;
       pointer-events: none;
       border-radius: 4px;
     }
+
     #game-canvas {
       display: block;
       width: calc(256px * 3);
       height: calc(240px * 3);
-      max-width: 90vw;
-      max-height: 90vh;
+      max-width: 88vw;
+      max-height: 52vh;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
       background-color: #000000;
-      border: 2px solid #201830;
-      box-shadow: 0 0 16px rgba(66, 40, 100, 0.4);
+      border-radius: 4px;
+    }
+
+    /* Footer hints & Toggle */
+    .footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: calc(256px * 3 + 40px);
+      margin-top: 10px;
+      padding: 0 8px;
     }
     .footer-hint {
+      font-size: 11px;
+      color: #8c81a5;
+      letter-spacing: 0.5px;
+    }
+    .gamepad-toggle-btn {
+      background: #251b36;
+      color: #e4d8ff;
+      border: 1px solid #5a457a;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-family: monospace;
+      cursor: pointer;
+    }
+    .gamepad-toggle-btn:active {
+      background: #473268;
+    }
+
+    /* Virtual Gamepad - Authentic NES / Odd Controller Style */
+    #virtual-gamepad-root {
+      width: 100%;
+      max-width: 600px;
       margin-top: 12px;
-      font-size: 12px;
-      color: #7b7190;
+      display: flex;
+      justify-content: center;
+    }
+
+    .virtual-gamepad-container {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 18px;
+      background: linear-gradient(180deg, #241b35 0%, #150f22 100%);
+      border: 3px solid #3c2d58;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), inset 0 2px 0 rgba(255, 255, 255, 0.1);
+      touch-action: none;
+    }
+
+    /* D-PAD Cross */
+    .dpad-container {
+      position: relative;
+      width: 128px;
+      height: 128px;
+      display: grid;
+      grid-template-columns: 42px 44px 42px;
+      grid-template-rows: 42px 44px 42px;
+    }
+    .dpad-btn {
+      background: linear-gradient(180deg, #1f182c 0%, #120c1c 100%);
+      border: 2px solid #4a386c;
+      color: #d8c8f8;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 3px 6px rgba(0,0,0,0.6);
+    }
+    .dpad-btn:active, .dpad-btn.active {
+      background: #7852a9;
+      color: #fff;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+      transform: translateY(1px);
+    }
+    .dpad-up {
+      grid-column: 2;
+      grid-row: 1;
+      border-radius: 8px 8px 0 0;
+      border-bottom: none;
+    }
+    .dpad-down {
+      grid-column: 2;
+      grid-row: 3;
+      border-radius: 0 0 8px 8px;
+      border-top: none;
+    }
+    .dpad-left {
+      grid-column: 1;
+      grid-row: 2;
+      border-radius: 8px 0 0 8px;
+      border-right: none;
+    }
+    .dpad-right {
+      grid-column: 3;
+      grid-row: 2;
+      border-radius: 0 8px 8px 0;
+      border-left: none;
+    }
+    .dpad-center {
+      grid-column: 2;
+      grid-row: 2;
+      background: #181224;
+      border: none;
+    }
+
+    /* Middle Option Buttons */
+    .middle-buttons-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .vbtn-menu {
+      width: 58px;
+      height: 24px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #302642 0%, #1a1326 100%);
+      border: 1.5px solid #58447a;
+      color: #c0b0e0;
+      font-size: 9px;
+      font-weight: bold;
+      font-family: monospace;
       letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    }
+    .vbtn-menu:active, .vbtn-menu.active {
+      background: #62488a;
+      color: #fff;
+      transform: translateY(1px);
+    }
+
+    /* Action Buttons (A & B) */
+    .action-buttons-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transform: rotate(-12deg);
+    }
+    .vbtn {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      font-family: monospace;
+      font-weight: bold;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: pointer;
+      box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.7),
+        inset 0 2px 2px rgba(255, 255, 255, 0.35);
+    }
+    /* B button: Magenta */
+    .vbtn-b {
+      background: radial-gradient(circle at 35% 30%, #c4307a 0%, #7d1a4c 100%);
+      border: 3px solid #4a102e;
+      color: #ffe0ef;
+    }
+    .vbtn-b:active, .vbtn-b.active {
+      background: #d6478e;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9);
+      transform: translateY(2px);
+    }
+    /* A button: Golden Yellow */
+    .vbtn-a {
+      background: radial-gradient(circle at 35% 30%, #f4c430 0%, #9e7a18 100%);
+      border: 3px solid #574209;
+      color: #3b2c05;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+    .vbtn-a:active, .vbtn-a.active {
+      background: #ffd95c;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9);
+      transform: translateY(2px);
+    }
+
+    /* Mobile Responsive Optimizations */
+    @media (max-width: 768px) {
+      .tv-cabinet {
+        padding: 12px 10px 10px;
+        border-radius: 12px;
+        border-width: 3px;
+        width: 98vw;
+      }
+      #game-canvas {
+        width: 100%;
+        height: auto;
+        max-height: 48vh;
+      }
+      .footer-hint {
+        display: none;
+      }
+      #virtual-gamepad-root {
+        margin-top: 8px;
+      }
+      .virtual-gamepad-container {
+        padding: 8px 12px;
+      }
+      .dpad-container {
+        width: 110px;
+        height: 110px;
+        grid-template-columns: 36px 38px 36px;
+        grid-template-rows: 36px 38px 36px;
+      }
+      .vbtn {
+        width: 48px;
+        height: 48px;
+        font-size: 18px;
+      }
+      .action-buttons-container {
+        gap: 12px;
+      }
     }
   </style>
-  <script type="module" crossorigin src="./assets/index-DNos9q-u.js"></script>
+  <script type="module" crossorigin src="./assets/index-Ce-plMOG.js"></script>
 </head>
 <body>
-  <div class="crt-container">
-    <canvas id="game-canvas" width="256" height="240"></canvas>
+  <div class="tv-cabinet">
+    <div class="tv-header">
+      <div class="tv-power-led">
+        <div class="led-bulb"></div>
+        <span>POWER</span>
+      </div>
+      <div class="tv-badge">MANTLE</div>
+      <div class="tv-power-led">
+        <span>CH 03</span>
+      </div>
+    </div>
+
+    <div class="crt-container">
+      <canvas id="game-canvas" width="256" height="240"></canvas>
+    </div>
   </div>
-  <div class="footer-hint">
-    [ARROWS / WASD] Move &nbsp;|&nbsp; [Z / J] Action &nbsp;|&nbsp; [X / K] Cancel/Run &nbsp;|&nbsp; [C / L] Menu
+
+  <div class="footer-bar">
+    <div class="footer-hint">
+      [ARROWS / WASD] Move &nbsp;|&nbsp; [Z / J] Action &nbsp;|&nbsp; [X / K] Run &nbsp;|&nbsp; [C / L] Menu
+    </div>
+    <button class="gamepad-toggle-btn" id="toggle-gamepad-btn">🎮 CONTROLS</button>
   </div>
+
+  <div id="virtual-gamepad-root"></div>
+
 </body>
 </html>

@@ -8,6 +8,8 @@ export type InputAction = 'up' | 'down' | 'left' | 'right' | 'action' | 'cancel'
 export class InputManager {
   private currentKeys: Set<string> = new Set();
   private previousKeys: Set<string> = new Set();
+  private virtualKeys: Set<string> = new Set();
+  private previousVirtualKeys: Set<string> = new Set();
   private actionBindings: Map<string, string[]> = new Map();
   private target: EventTarget | null = null;
   private keyDownHandler: (e: KeyboardEvent) => void;
@@ -65,6 +67,17 @@ export class InputManager {
   }
 
   /**
+   * Sets the pressed state for a mobile virtual gamepad action.
+   */
+  public setVirtualKey(action: string, isDown: boolean): void {
+    if (isDown) {
+      this.virtualKeys.add(action);
+    } else {
+      this.virtualKeys.delete(action);
+    }
+  }
+
+  /**
    * Bind custom keys to an action.
    */
   public bind(action: string, keys: string[]): void {
@@ -72,9 +85,12 @@ export class InputManager {
   }
 
   /**
-   * Checks if an action is currently held down.
+   * Checks if an action is currently held down via physical keyboard or virtual gamepad.
    */
   public isDown(action: string): boolean {
+    if (this.virtualKeys.has(action)) {
+      return true;
+    }
     const keys = this.actionBindings.get(action) || [action];
     for (const key of keys) {
       if (this.currentKeys.has(key)) {
@@ -85,9 +101,12 @@ export class InputManager {
   }
 
   /**
-   * Checks if an action was just pressed on the current frame.
+   * Checks if an action was just pressed on the current frame via keyboard or virtual gamepad.
    */
   public isJustPressed(action: string): boolean {
+    if (this.virtualKeys.has(action) && !this.previousVirtualKeys.has(action)) {
+      return true;
+    }
     const keys = this.actionBindings.get(action) || [action];
     for (const key of keys) {
       if (this.currentKeys.has(key) && !this.previousKeys.has(key)) {
@@ -102,6 +121,7 @@ export class InputManager {
    */
   public update(): void {
     this.previousKeys = new Set(this.currentKeys);
+    this.previousVirtualKeys = new Set(this.virtualKeys);
   }
 
   /**
@@ -110,5 +130,7 @@ export class InputManager {
   public reset(): void {
     this.currentKeys.clear();
     this.previousKeys.clear();
+    this.virtualKeys.clear();
+    this.previousVirtualKeys.clear();
   }
 }

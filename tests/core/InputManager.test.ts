@@ -110,4 +110,23 @@ describe('InputManager', () => {
     expect(input.isDown('action')).toBe(false);
     expect(input.isJustPressed('action')).toBe(false);
   });
+
+  it('should seamlessly process virtual gamepad inputs', () => {
+    expect(input.isDown('action')).toBe(false);
+    expect(input.isJustPressed('action')).toBe(false);
+
+    // Virtual action down
+    input.setVirtualKey('action', true);
+    expect(input.isDown('action')).toBe(true);
+    expect(input.isJustPressed('action')).toBe(true);
+
+    // Next frame update
+    input.update();
+    expect(input.isDown('action')).toBe(true);
+    expect(input.isJustPressed('action')).toBe(false);
+
+    // Virtual action released
+    input.setVirtualKey('action', false);
+    expect(input.isDown('action')).toBe(false);
+  });
 });

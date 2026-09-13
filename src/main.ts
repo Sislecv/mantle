@@ -12,6 +12,7 @@ import { ChiptuneSynth } from './audio/ChiptuneSynth';
 import { GameLoop } from './core/GameLoop';
 import { Chapter1Story } from './scenes/Chapter1Story';
 import { SpriteLoader } from './core/SpriteLoader';
+import { VirtualGamepad } from './ui/VirtualGamepad';
 
 export class MantleApp {
   public renderer: Renderer;
@@ -19,6 +20,7 @@ export class MantleApp {
   public synth: ChiptuneSynth;
   public loop: GameLoop;
   public story: Chapter1Story;
+  public gamepad: VirtualGamepad;
 
   constructor() {
     SpriteLoader.initCoreSprites();
@@ -31,6 +33,12 @@ export class MantleApp {
       synth: this.synth,
     });
     this.loop = new GameLoop();
+    this.gamepad = new VirtualGamepad(this.input);
+
+    if (typeof document !== 'undefined') {
+      const root = document.getElementById('virtual-gamepad-root') || document.body;
+      this.gamepad.mount(root);
+    }
 
     this.setupLoop();
   }

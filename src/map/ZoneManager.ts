@@ -168,14 +168,106 @@ export class ZoneManager {
   }
 
   /**
-   * Renders the active zone: base tilemap followed by all obstacles.
+   * Renders the active zone: atmospheric background, base tilemap, and obstacles.
    */
   public render(renderer: Renderer, cameraX = 0, cameraY = 0): void {
     const current = this.getCurrentZone();
+
+    // 1. Zone-specific atmospheric background
+    this.renderZoneBackground(renderer, current.id, cameraX, cameraY);
+
+    // 2. Base tilemap
     current.tilemap.render(renderer, cameraX, cameraY);
 
+    // 3. Zone props & ambient effects
+    this.renderZoneAtmosphere(renderer, current.id);
+
+    // 4. Destructible obstacles
     for (const obstacle of current.obstacles) {
       obstacle.render(renderer, cameraX, cameraY);
+    }
+  }
+
+  /**
+   * Renders authentic 8-bit ambient backdrop for each zone.
+   */
+  private renderZoneBackground(
+    renderer: Renderer,
+    zoneId: string,
+    _camX: number,
+    _camY: number
+  ): void {
+    switch (zoneId) {
+      case ZONE_IDS.CLIFFS:
+        // Dark indigo to abyssal purple gradient
+        renderer.drawRect(0, 0, 256, 240, '#0E0918', true);
+        break;
+      case ZONE_IDS.CASTLE_TOWN:
+        // Pure silent dark town
+        renderer.drawRect(0, 0, 256, 240, '#080810', true);
+        break;
+      case ZONE_IDS.FIELD:
+        // Field of Hopes & Dreams deep crimson base
+        renderer.drawRect(0, 0, 256, 240, '#1C060E', true);
+        break;
+      case ZONE_IDS.FOREST:
+        // Scarlet Forest deep maroon
+        renderer.drawRect(0, 0, 256, 240, '#24080A', true);
+        break;
+      case ZONE_IDS.CASTLE:
+        // Royal Card Castle deep obsidian navy
+        renderer.drawRect(0, 0, 256, 240, '#060B18', true);
+        break;
+    }
+  }
+
+  /**
+   * Ambient particles and thematic visual accents.
+   */
+  private renderZoneAtmosphere(renderer: Renderer, zoneId: string): void {
+    const time = Date.now();
+
+    switch (zoneId) {
+      case ZONE_IDS.CLIFFS: {
+        // Floating dust specks in the dark cliffs
+        for (let i = 0; i < 12; i++) {
+          const px = (i * 37 + Math.sin(time / 1000 + i) * 12) % 240 + 8;
+          const py = (i * 23 + (time / 80) * (i % 2 === 0 ? 0.3 : 0.5)) % 220 + 15;
+          renderer.drawRect(Math.floor(px), Math.floor(py), 1, 1, '#665588', true);
+        }
+        break;
+      }
+      case ZONE_IDS.CASTLE_TOWN: {
+        // Distant ethereal beam of the Dark Fountain (center horizon)
+        renderer.drawRect(124, 0, 8, 120, 'rgba(64, 192, 224, 0.15)', true);
+        renderer.drawRect(126, 0, 4, 120, 'rgba(255, 255, 255, 0.25)', true);
+        break;
+      }
+      case ZONE_IDS.FIELD: {
+        // Red checkerboard accents on ground
+        for (let gx = 1; gx < 15; gx += 2) {
+          for (let gy = 1; gy < 14; gy += 2) {
+            renderer.drawRect(gx * 16, gy * 16, 16, 16, 'rgba(180, 20, 60, 0.08)', true);
+          }
+        }
+        break;
+      }
+      case ZONE_IDS.FOREST: {
+        // Falling scarlet leaves drifting down
+        for (let i = 0; i < 10; i++) {
+          const lx = (i * 29 + Math.sin(time / 400 + i) * 14) % 240 + 8;
+          const ly = (i * 31 + (time / 50) * 0.4) % 220 + 15;
+          renderer.drawRect(Math.floor(lx), Math.floor(ly), 2, 2, '#D32F2F', true);
+        }
+        break;
+      }
+      case ZONE_IDS.CASTLE: {
+        // Royal spade marble corner accents
+        for (let gx = 2; gx < 14; gx += 4) {
+          renderer.drawRect(gx * 16 + 7, 24, 2, 2, 'rgba(255, 255, 255, 0.15)', true);
+        }
+        break;
+      }
     }
   }
 

@@ -34,7 +34,9 @@ export class Player extends Entity {
   public maxHp: number;
   public exp: number;
   public attackDamage: number;
+  public attackTimer: number = 0;
   public attackFrame: number = 0;
+  public walkTimer: number = 0;
   public attackHitbox: Hitbox | null = null;
   public invulnerableTime: number = 0;
   public pullTimer: number = 0;
@@ -59,7 +61,6 @@ export class Player extends Entity {
   }
 
   // Internal timers & configurations
-  private attackTimer: number = 0;
   private attackDuration: number = 0.25;
   private hurtTimer: number = 0;
   private readonly hurtDuration: number = 0.3;
@@ -393,6 +394,13 @@ export class Player extends Entity {
     }
 
     this.moveWithCollision(dt, tilemap, obstacles);
+
+    const isMoving = this.vx !== 0 || this.vy !== 0;
+    if (isMoving) {
+      this.walkTimer += dt;
+    } else {
+      this.walkTimer = 0;
+    }
   }
 
   /**
@@ -535,7 +543,9 @@ export class Player extends Entity {
     const isLeft = this.facing === 'LEFT';
     const isRight = this.facing === 'RIGHT';
     const isUp = this.facing === 'UP';
-    const frame = isMoving ? (Math.floor(Date.now() / 150) % 2) : 0;
+    // 4-beat smooth gait: step 0 (left step), step 1 (stand), step 2 (right step), step 3 (stand)
+    const step = Math.floor(this.walkTimer * 5) % 4;
+    const frame = isMoving && step === 2 ? 1 : 0;
 
     let spriteKey = 'ch3_kris_down_0';
     let flipX = false;

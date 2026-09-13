@@ -248,7 +248,8 @@ export class Follower extends Entity {
    * Susie (HERO_AXE): Dark violet armor, magenta skin, golden axe.
    */
   private renderSusie(renderer: Renderer, x: number, y: number): void {
-    const frame = this.isMoving ? (this.walkFrame % 2) : 0;
+    // 4-beat smooth gait: step 0 (left step), step 1 (stand), step 2 (right step), step 3 (stand)
+    const frame = this.isMoving && this.walkFrame === 2 ? 1 : 0;
     let spriteKey = `ch3_susie_down_${frame}`;
     let flipX = false;
 
@@ -339,7 +340,8 @@ export class Follower extends Entity {
    * Ralsei (HERO_SCARF): Forest green robe, long pink scarf trailing.
    */
   private renderRalsei(renderer: Renderer, x: number, y: number): void {
-    const frame = this.isMoving ? (this.walkFrame % 2) : 0;
+    // 4-beat smooth gait: step 0 (left step), step 1 (stand), step 2 (right step), step 3 (stand)
+    const frame = this.isMoving && this.walkFrame === 2 ? 1 : 0;
     let spriteKey = `ch3_ralsei_down_${frame}`;
     let flipX = false;
 

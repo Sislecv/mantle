@@ -76,6 +76,13 @@ export class Chapter1Story {
   public isFountainSealed: boolean = false;
   public whiteoutAlpha: number = 0;
   public epilogueText: string = '';
+  public notificationText: string = '';
+  public notificationTimer: number = 0;
+
+  public showNotification(text: string, duration = 2.0): void {
+    this.notificationText = text;
+    this.notificationTimer = duration;
+  }
 
   constructor(options?: Chapter1StoryOptions) {
     this.synth = options?.synth ?? new ChiptuneSynth();
@@ -142,6 +149,9 @@ export class Chapter1Story {
     this.rouxlsPuzzle.onSolveCallback = () => {
       this.castleGateOpened = true;
       this.stage = 'ROUXLS_SOLVED';
+      const castle = this.zoneManager.getCurrentZone();
+      const gate = castle.obstacles.find((o) => o.id === 'castle_gate_1');
+      if (gate) gate.destroy();
     };
   }
 
@@ -162,12 +172,15 @@ export class Chapter1Story {
       [
         {
           speaker: 'SUSIE',
-          text: 'Kris?! Where the hell are we?! Let\'s get moving.',
+          text: 'Kris?! Where the hell are we?! Let\'s smash this gate and get moving.',
         },
       ],
       () => {
         this.mode = 'OVERWORLD';
         this.stage = 'MET_SUSIE';
+        const currentZone = this.zoneManager.getCurrentZone();
+        const gate = currentZone.obstacles.find((o) => o.id === 'cliffs_gate_1');
+        if (gate) gate.destroy();
       }
     );
   }
@@ -220,12 +233,43 @@ export class Chapter1Story {
   }
 
   /**
+   * Transitions into Scarlet Forest with party alignment.
+   */
+  public enterForest(): void {
+    this.zoneManager.loadZone(ZONE_IDS.FOREST);
+    this.player.x = this.zoneManager.playerSpawnX * TILE_SIZE;
+    this.player.y = this.zoneManager.playerSpawnY * TILE_SIZE;
+
+    if (this.isSusieInParty) {
+      this.susieFollower.x = this.player.x - 16;
+      this.susieFollower.y = this.player.y;
+      this.susieFollower.breadcrumbs = [];
+    }
+    if (this.isRalseiInParty) {
+      this.ralseiFollower.x = this.player.x - 32;
+      this.ralseiFollower.y = this.player.y;
+      this.ralseiFollower.breadcrumbs = [];
+    }
+  }
+
+  /**
    * Transitions into Card Castle.
    */
   public enterCastle(): void {
     this.zoneManager.loadZone(ZONE_IDS.CASTLE);
     this.player.x = this.zoneManager.playerSpawnX * TILE_SIZE;
     this.player.y = this.zoneManager.playerSpawnY * TILE_SIZE;
+
+    if (this.isSusieInParty) {
+      this.susieFollower.x = this.player.x - 16;
+      this.susieFollower.y = this.player.y;
+      this.susieFollower.breadcrumbs = [];
+    }
+    if (this.isRalseiInParty) {
+      this.ralseiFollower.x = this.player.x - 32;
+      this.ralseiFollower.y = this.player.y;
+      this.ralseiFollower.breadcrumbs = [];
+    }
   }
 
   /**
@@ -350,6 +394,10 @@ export class Chapter1Story {
   public update(dt: number, inputOverride?: InputManager): void {
     const activeInput = inputOverride ?? this.input ?? undefined;
 
+    if (this.notificationTimer > 0) {
+      this.notificationTimer = Math.max(0, this.notificationTimer - dt);
+    }
+
     // 1. Epilogue Phase
     if (this.mode === 'EPILOGUE') {
       if (this.whiteoutAlpha < 1) {
@@ -471,6 +519,8 @@ export class Chapter1Story {
 
         if (transition.targetZoneId === ZONE_IDS.FIELD && !this.isSusieInParty) {
           this.enterField();
+        } else if (transition.targetZoneId === ZONE_IDS.FOREST) {
+          this.enterForest();
         } else if (transition.targetZoneId === ZONE_IDS.CASTLE) {
           this.enterCastle();
         }
@@ -605,6 +655,23 @@ export class Chapter1Story {
 
     // Overworld Authentic Chapter 3 Mantle Top HUD
     this.renderHUD(renderer, currentZone.name);
+
+    // Save/Notification Toast Banner
+    if (this.notificationTimer > 0) {
+      const nw = 120;
+      const nh = 16;
+      const nx = (CANVAS_WIDTH - nw) / 2;
+      const ny = 22;
+      renderer.ctx.save();
+      renderer.drawRect(nx - 2, ny - 2, nw + 4, nh + 4, '#000000');
+      renderer.drawRect(nx, ny, nw, nh, '#1B142A');
+      renderer.drawText(this.notificationText, CANVAS_WIDTH / 2, ny + 5, {
+        color: NES_COLORS.GOLD_ACCENT,
+        size: 7,
+        align: 'center',
+      });
+      renderer.ctx.restore();
+    }
   }
 
   private renderHUD(renderer: Renderer, zoneName: string): void {

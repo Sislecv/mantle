@@ -5,6 +5,9 @@
  */
 
 import { InputManager } from '../core/InputManager';
+import { SaveManager } from '../core/SaveManager';
+import { Chapter1Story } from '../scenes/Chapter1Story';
+import { ChiptuneSynth } from '../audio/ChiptuneSynth';
 
 export class VirtualGamepad {
   private input: InputManager;
@@ -25,9 +28,18 @@ export class VirtualGamepad {
     this.container.className = 'virtual-gamepad-container';
     this.container.innerHTML = `
       <div class="gamepad-top-toolbar">
-        <button class="top-util-btn" data-cmd="restart" title="Restart chapter">↺ RESTART</button>
-        <button class="top-util-btn" data-cmd="sound" title="Toggle Sound">🔊 SOUND</button>
-        <button class="top-util-btn" data-cmd="fullscreen" title="Toggle Fullscreen">⛶ FULLSCREEN</button>
+        <div class="toolbar-group">
+          <button class="top-util-btn" data-cmd="save" title="Save game to browser">💾 SAVE</button>
+          <button class="top-util-btn" data-cmd="load" title="Load game from browser">📂 LOAD</button>
+          <button class="top-util-btn" data-cmd="export" title="Export save to JSON file">📥 EXPORT</button>
+          <button class="top-util-btn" data-cmd="import" title="Upload save from JSON file">📤 IMPORT</button>
+        </div>
+        <div class="toolbar-group">
+          <button class="top-util-btn" data-cmd="restart" title="Restart chapter">↺ RESTART</button>
+          <button class="top-util-btn" data-cmd="sound" title="Toggle Sound">🔊 SOUND</button>
+          <button class="top-util-btn" data-cmd="fullscreen" title="Toggle Fullscreen">⛶ FULLSCREEN</button>
+        </div>
+        <input type="file" id="gamepad-save-file-input" accept=".json" style="display:none" />
       </div>
 
       <div class="gamepad-main-row">
@@ -126,16 +138,52 @@ export class VirtualGamepad {
       }
     });
 
-    // Command buttons (restart, sound, fullscreen)
+    // Command buttons (save, load, export, import, restart, sound, fullscreen)
+    const fileInput = this.container.querySelector<HTMLInputElement>('#gamepad-save-file-input');
+    if (fileInput) {
+      const fileChangeHandler = async (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        const file = target.files?.[0];
+        if (file) {
+          const app = (window as unknown as { __mantleApp?: { story: Chapter1Story; synth: ChiptuneSynth } }).__mantleApp;
+          if (app) {
+            const ok = await SaveManager.importSaveFromFile(file, app.story);
+            app.story.showNotification(ok ? 'SAVE IMPORTED!' : 'INVALID SAVE FILE');
+            app.synth.playSfx(ok ? 'CONFIRM' : 'HURT');
+          }
+        }
+        target.value = '';
+      };
+      fileInput.addEventListener('change', fileChangeHandler);
+      this.boundElements.push({ el: fileInput, event: 'change', fn: fileChangeHandler as EventListener });
+    }
+
     const cmdButtons = this.container.querySelectorAll<HTMLElement>('[data-cmd]');
     cmdButtons.forEach((btn) => {
       const cmd = btn.getAttribute('data-cmd');
       const clickHandler = (e: Event) => {
         e.preventDefault();
-        const app = (window as unknown as { __mantleApp?: { story: { restart: () => void }; synth: { toggleMute: () => boolean } } }).__mantleApp;
-        if (cmd === 'restart' && app) {
+        const app = (window as unknown as { __mantleApp?: { story: Chapter1Story; synth: ChiptuneSynth } }).__mantleApp;
+        if (!app) return;
+
+        if (cmd === 'save') {
+          const ok = SaveManager.saveToLocal(app.story);
+          app.story.showNotification(ok ? 'PROGRESS SAVED!' : 'SAVE FAILED');
+          app.synth.playSfx('SELECT');
+        } else if (cmd === 'load') {
+          const ok = SaveManager.loadFromLocal(app.story);
+          app.story.showNotification(ok ? 'PROGRESS LOADED!' : 'NO SAVE FOUND');
+          app.synth.playSfx(ok ? 'CONFIRM' : 'HURT');
+        } else if (cmd === 'export') {
+          SaveManager.exportSaveToFile(app.story);
+          app.story.showNotification('FILE EXPORTED!');
+          app.synth.playSfx('SELECT');
+        } else if (cmd === 'import') {
+          fileInput?.click();
+        } else if (cmd === 'restart') {
           app.story.restart();
-        } else if (cmd === 'sound' && app) {
+          app.story.showNotification('CHAPTER RESTARTED');
+        } else if (cmd === 'sound') {
           const isMuted = app.synth.toggleMute();
           btn.textContent = isMuted ? '🔇 MUTED' : '🔊 SOUND';
         } else if (cmd === 'fullscreen') {

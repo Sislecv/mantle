@@ -130,6 +130,14 @@ export class DestructibleObstacle {
   }
 
   /**
+   * Directly destroys the obstacle (e.g. triggered by cutscenes or puzzle solutions).
+   */
+  public destroy(): void {
+    this.hp = 0;
+    this.isDestroyed = true;
+  }
+
+  /**
    * Renders the obstacle (intact or destroyed remains).
    */
   public render(renderer: Renderer, cameraX = 0, cameraY = 0): void {

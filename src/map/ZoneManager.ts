@@ -156,11 +156,14 @@ export class ZoneManager {
 
   /**
    * Checks whether the current grid coordinate contains a transition point.
+   * Tolerant to border tile alignment so players hitting map boundaries transition smoothly.
    */
   public checkTransition(gridX: number, gridY: number): ZoneTransition | null {
     const current = this.getCurrentZone();
     for (const tr of current.transitions) {
-      if (tr.gridX === gridX && tr.gridY === gridY) {
+      const matchX = tr.gridX === gridX || (tr.gridX === 15 && gridX >= 14) || (tr.gridX === 0 && gridX <= 1);
+      const matchY = Math.abs(tr.gridY - gridY) <= 1;
+      if (matchX && matchY) {
         return tr;
       }
     }
@@ -309,7 +312,7 @@ export class ZoneManager {
         gridY: 7,
         type: 'WOOD_GATE',
         requiredLv: 1,
-        requiredSword: true,
+        requiredSword: false,
       }),
     ];
 
